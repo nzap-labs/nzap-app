@@ -8,7 +8,7 @@ test.describe('Console', () => {
     await runCell(page, 'print("hello from the e2e")\nanswer')
     const output = page.locator('.font-mono.text-xs.leading-relaxed').first()
     await expect(output.getByText('hello from the e2e')).toBeVisible()
-    await expect(output.getByText('42')).toBeVisible()
+    await expect(output.getByText('42', { exact: true })).toBeVisible()
     await expect(output.getByText(/✓ finished/)).toBeVisible()
 
     await runCell(page, 'fail()')

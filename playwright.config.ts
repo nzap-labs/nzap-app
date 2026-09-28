@@ -8,12 +8,16 @@ const chromiumLaunch = process.env.PW_CHROMIUM_PATH
   : {}
 
 /**
- * Web E2E: the real UI in Chromium and WebKit (the engine behind macOS and
- * Linux webviews) against the simulated engine. Desktop E2E, with the real
- * Rust engine, lives in e2e/desktop.
+ * Web E2E: the real UI against the simulated engine.
+ *
+ * - `e2e/mobile` runs on phones and a portrait tablet (touch, the bottom tab
+ *   bar, sheets) in Chromium — Android's WebView engine — and WebKit — iOS's.
+ * - `e2e/web` runs the wide layout (tablets in landscape, the desktop
+ *   development build) in both engines.
+ *
+ * The real app on an Android emulator is covered by e2e/android.
  */
 export default defineConfig({
-  testDir: 'e2e/web',
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
@@ -23,8 +27,31 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [
+    // Phones and portrait tablets.
+    {
+      name: 'pixel-7',
+      testDir: 'e2e/mobile',
+      use: { ...devices['Pixel 7'], ...chromiumLaunch },
+    },
+    {
+      name: 'galaxy-s8',
+      testDir: 'e2e/mobile',
+      use: { ...devices['Galaxy S8'], ...chromiumLaunch },
+    },
+    {
+      name: 'iphone-15',
+      testDir: 'e2e/mobile',
+      use: { ...devices['iPhone 15'] },
+    },
+    {
+      name: 'ipad-mini',
+      testDir: 'e2e/mobile',
+      use: { ...devices['iPad Mini'] },
+    },
+    // The wide layout.
     {
       name: 'chromium',
+      testDir: 'e2e/web',
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1280, height: 860 },
@@ -33,6 +60,7 @@ export default defineConfig({
     },
     {
       name: 'webkit',
+      testDir: 'e2e/web',
       use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 860 } },
     },
   ],

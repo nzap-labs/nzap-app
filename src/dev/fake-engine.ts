@@ -79,6 +79,8 @@ export interface FakeState {
   /** Commands invoked, in order (for assertions). */
   calls: string[]
   saved: { filename: string; content: string }[]
+  /** Files handed to the share sheet / file manager (`reveal_path`, logs). */
+  shared: string[]
 }
 
 export interface FakeControls {
@@ -140,7 +142,13 @@ function initialState(): FakeState {
     opened: [],
     calls: [],
     saved: [],
+    shared: [],
   }
+}
+
+/** Phones (touch devices) save through a picker and report the file name. */
+function savedAs(filename: string): string {
+  return navigator.maxTouchPoints > 0 ? filename : `/Users/you/Downloads/${filename}`
 }
 
 class Failure {
@@ -548,7 +556,10 @@ export function installFakeEngine(): FakeControls {
         s().opened.push(String(args.url))
         return null
       case 'reveal_path':
+        s().shared.push(String(args.path))
+        return null
       case 'open_log_dir':
+        s().shared.push('nzap.log')
         return null
       case 'stream_cancel': {
         const cancel = cancels.get(String(args.streamId))
@@ -870,6 +881,9 @@ export function installFakeEngine(): FakeControls {
             const command = terminal.line.trim()
             output += `\r\n${command === 'whoami' ? 'root\r\n' : command === 'pwd' ? '/content\r\n' : command ? `sh: 1: ${command}: not found\r\n` : ''}root@fake:/content# `
             terminal.line = ''
+          } else if (char === '\u0003') {
+            output += '^C\r\nroot@fake:/content# '
+            terminal.line = ''
           } else if (char === '\u007f') {
             if (terminal.line) {
               terminal.line = terminal.line.slice(0, -1)
@@ -901,7 +915,7 @@ export function installFakeEngine(): FakeControls {
           filename: `${String(args.name)}.${String(args.format)}`,
           content: JSON.stringify(s().history.get(String(args.name)) ?? []),
         })
-        return `/Users/you/Downloads/${String(args.name)}.${String(args.format)}`
+        return savedAs(`${String(args.name)}.${String(args.format)}`)
       case 'history_clear':
         s().history.delete(String(args.name))
         return null
@@ -977,10 +991,10 @@ export function installFakeEngine(): FakeControls {
         return null
       }
       case 'files_download':
-        return `/Users/you/Downloads/${String(args.path).split('/').pop()}`
+        return savedAs(String(args.path).split('/').pop()!)
       case 'save_text_file':
         s().saved.push({ filename: String(args.filename), content: String(args.content) })
-        return `/Users/you/Downloads/${String(args.filename)}`
+        return savedAs(String(args.filename))
 
       // -- notebooks
       case 'notebooks_list':
@@ -1037,7 +1051,7 @@ export function installFakeEngine(): FakeControls {
         )
       }
       case 'notebook_export':
-        return `/Users/you/Downloads/${findNotebook(args.id).slug}.nzap.json`
+        return savedAs(`${findNotebook(args.id).slug}.nzap.json`)
       case 'notebook_import': {
         let file: Json
         try {
@@ -1205,7 +1219,7 @@ export function installFakeEngine(): FakeControls {
         type: 'artifact',
         path: '/content/out/result.txt',
         size: 12,
-        savedTo: `/Users/you/Downloads/NZAP Engine/${name}/out/result.txt`,
+        savedTo: `/data/nzap/artifacts/${name}/out/result.txt`,
       })
     }
     const kept = Boolean(request.keep)

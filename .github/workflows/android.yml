@@ -22,6 +22,8 @@ env:
 jobs:
   release-build:
     name: release build (4 ABIs, R8)
+    # Dependabot PRs build only in nzap-labs/nzap-app, not in CI mirrors.
+    if: github.actor != 'dependabot[bot]' || github.repository == 'nzap-labs/nzap-app'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:

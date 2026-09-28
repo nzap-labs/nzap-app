@@ -18,6 +18,8 @@ env:
 jobs:
   frontend:
     name: frontend
+    # Dependabot PRs build only in nzap-labs/nzap-app, not in CI mirrors.
+    if: github.actor != 'dependabot[bot]' || github.repository == 'nzap-labs/nzap-app'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,6 +36,8 @@ jobs:
 
   rust:
     name: rust (engine + shell)
+    # Dependabot PRs build only in nzap-labs/nzap-app, not in CI mirrors.
+    if: github.actor != 'dependabot[bot]' || github.repository == 'nzap-labs/nzap-app'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -62,6 +66,8 @@ jobs:
 
   audit:
     name: dependency audit
+    # Dependabot PRs build only in nzap-labs/nzap-app, not in CI mirrors.
+    if: github.actor != 'dependabot[bot]' || github.repository == 'nzap-labs/nzap-app'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -78,6 +84,8 @@ jobs:
 
   web-e2e:
     name: web e2e (mobile viewports)
+    # Dependabot PRs build only in nzap-labs/nzap-app, not in CI mirrors.
+    if: github.actor != 'dependabot[bot]' || github.repository == 'nzap-labs/nzap-app'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

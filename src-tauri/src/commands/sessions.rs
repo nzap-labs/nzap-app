@@ -37,10 +37,12 @@ pub struct CreatedSession {
 /// Assign a CPU / GPU / TPU runtime and connect a kernel to it.
 #[tauri::command]
 pub async fn session_create(
+    app: AppHandle,
     state: State<'_, AppState>,
     request: RuntimeRequest,
 ) -> CmdResult<CreatedSession> {
     let (session, connected) = state.engine.sessions.create_and_connect(request).await?;
+    platform::sync_background(&app);
     Ok(CreatedSession { session, connected })
 }
 
@@ -92,8 +94,14 @@ pub async fn session_drive_authorize(state: State<'_, AppState>, name: String) -
 
 /// Stop the kernel, release the VM and forget the runtime.
 #[tauri::command]
-pub async fn session_stop(state: State<'_, AppState>, name: String) -> CmdResult<StopOutcome> {
-    state.engine.sessions.stop(&name, true).await.map_err(Into::into)
+pub async fn session_stop(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    name: String,
+) -> CmdResult<StopOutcome> {
+    let outcome = state.engine.sessions.stop(&name, true).await;
+    platform::sync_background(&app);
+    outcome.map_err(Into::into)
 }
 
 #[tauri::command]
@@ -211,11 +219,14 @@ pub async fn assignment_release(state: State<'_, AppState>, endpoint: String) ->
 
 #[tauri::command]
 pub async fn assignment_adopt(
+    app: AppHandle,
     state: State<'_, AppState>,
     endpoint: String,
     name: Option<String>,
 ) -> CmdResult<SessionView> {
-    state.engine.sessions.adopt(&endpoint, name.as_deref()).await.map_err(Into::into)
+    let adopted = state.engine.sessions.adopt(&endpoint, name.as_deref()).await;
+    platform::sync_background(&app);
+    adopted.map_err(Into::into)
 }
 
 // --------------------------------------------------------------- terminal

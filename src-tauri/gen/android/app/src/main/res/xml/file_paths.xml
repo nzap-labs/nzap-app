@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Files the app may hand to other apps (share sheet): only its own exports,
-  job artifacts, logs and the share cache. Never secrets or runtime state.
+  The only folder the app hands to other apps (share sheet): a cache folder
+  the Rust side stages exports, artifacts and logs into. Never secrets or
+  runtime state.
 -->
 <paths>
-    <files-path name="exports" path="exports/" />
-    <files-path name="artifacts" path="artifacts/" />
     <cache-path name="share" path="share/" />
-    <cache-path name="logs" path="logs/" />
 </paths>

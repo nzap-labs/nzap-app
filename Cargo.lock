@@ -2577,6 +2577,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-dialog",
  "tauri-plugin-log",
+ "tauri-plugin-nzap-mobile",
  "tauri-plugin-opener",
  "tempfile",
  "tokio",
@@ -4414,6 +4415,17 @@ dependencies = [
  "tauri-plugin",
  "thiserror 2.0.21",
  "time",
+]
+
+[[package]]
+name = "tauri-plugin-nzap-mobile"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

@@ -285,3 +285,40 @@ async fn code_exchange_enforces_pkce() {
 fn storage_kind_is_reported() {
     assert_eq!(MemoryStore::default().kind(), StorageKind::Memory);
 }
+
+/// mobile: a store that is only readable after startup (the Android
+/// Keystore). The manager starts disconnected, then `reload_secrets` picks up
+/// the stored connection.
+#[tokio::test]
+async fn secrets_that_arrive_after_startup_are_picked_up() {
+    let harness = Harness::new().await;
+    sign_in(&harness.manager()).await;
+    let token = harness.store.get("google-refresh-token").unwrap().unwrap();
+
+    // A fresh start whose store is still empty…
+    harness.store.delete("google-refresh-token").unwrap();
+    let manager = harness.manager();
+    assert!(!manager.snapshot().await.has_credentials);
+
+    // …until the platform store has loaded.
+    harness.store.set("google-refresh-token", &token).unwrap();
+    manager.reload_secrets().await;
+    assert!(manager.snapshot().await.has_credentials);
+    assert!(manager.access_token().await.is_ok());
+}
+
+/// mobile: the loopback page hands the browser back to the app.
+#[tokio::test]
+async fn the_sign_in_page_returns_to_the_app() {
+    let harness = Harness::new().await;
+    let manager = harness.manager();
+    manager.set_return_url(Some("nzap://auth/done".into()));
+    let login = manager.begin_loopback(None).await.unwrap();
+    let url = login.auth_url.clone();
+    let browse = async {
+        let page = reqwest::get(&url).await.unwrap().text().await.unwrap();
+        assert!(page.contains("href=\"nzap://auth/done\""), "{page}");
+    };
+    let (user, ()) = tokio::join!(manager.finish_loopback(login, LOGIN_TIMEOUT), browse);
+    user.unwrap();
+}

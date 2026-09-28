@@ -157,6 +157,21 @@ impl AuthManager {
         }
     }
 
+    /// mobile: read the refresh token from the secret store again, for
+    /// platform stores that only become readable after startup (the Android
+    /// Keystore is reached through the UI thread). A token already held in
+    /// memory (a sign-in that finished meanwhile) wins.
+    pub async fn reload_secrets(&self) {
+        let stored = self.secrets.get(REFRESH_TOKEN_KEY).unwrap_or_else(|error| {
+            tracing::warn!("Could not read the stored Google connection: {error}");
+            None
+        });
+        let mut state = self.state.lock().await;
+        if state.refresh_token.is_none() {
+            state.refresh_token = stored;
+        }
+    }
+
     pub async fn snapshot(&self) -> AuthSnapshot {
         let state = self.state.lock().await;
         let has_credentials = state.refresh_token.is_some();

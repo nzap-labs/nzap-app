@@ -14,6 +14,7 @@ use std::path::{Path, PathBuf};
 use nzap_core::auth::OAuthClient;
 use nzap_core::config::Endpoints;
 use nzap_core::paths::AppPaths;
+use nzap_core::settings::SettingsPatch;
 use nzap_core::{Engine, EngineOptions};
 use tauri::{AppHandle, Manager, RunEvent};
 
@@ -49,15 +50,23 @@ fn build_state(app: &AppHandle) -> Result<AppState, Box<dyn std::error::Error>> 
             .map_err(|error| log::warn!("NZAP_OAUTH_CLIENT_JSON: {error}"))
             .ok()
     });
+    let first_launch = !paths.settings_file().exists();
     let engine = Engine::new(EngineOptions {
         paths,
         endpoints,
-        // The platform store below; the desktop build keeps a 0600 file.
-        use_keychain: false,
+        // Android: the Keystore store below; iOS: the Keychain through
+        // nzap-core; desktop (dev): a 0600 file.
+        use_keychain: platform::use_engine_keychain(),
         oauth_client,
         secret_store: platform::secret_store(app),
         return_url: platform::auth_return_url(),
     })?;
+    // Phones keep runtimes alive in the background unless the user opts out
+    // (the setting is the desktop's close-to-tray).
+    if first_launch && cfg!(mobile) {
+        engine
+            .update_settings(SettingsPatch { close_to_tray: Some(true), ..Default::default() })?;
+    }
     Ok(AppState::new(engine, dev_env("NZAP_E2E_OPEN_LOG").map(PathBuf::from)))
 }
 
@@ -82,29 +91,38 @@ fn log_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     #[allow(unused_mut)]
-    let mut builder =
-        tauri::Builder::default().plugin(log_plugin()).plugin(tauri_plugin_opener::init());
+    let mut builder = tauri::Builder::default()
+        // First, so the shell can use it during setup.
+        .plugin(tauri_plugin_nzap_mobile::init())
+        .plugin(log_plugin())
+        .plugin(tauri_plugin_opener::init());
     #[cfg(desktop)]
     {
         builder = builder.plugin(tauri_plugin_dialog::init());
     }
 
     let app = builder
-        // Back from the background: re-check runtimes the OS may have let lapse.
         .on_window_event(|window, event| {
             #[cfg(mobile)]
-            if let tauri::WindowEvent::Resumed = event {
-                if let Some(state) = window.try_state::<AppState>() {
-                    let engine = state.engine.clone();
-                    tauri::async_runtime::spawn(async move { engine.resume().await });
+            match event {
+                // Back from the background: re-check runtimes the OS may
+                // have let lapse.
+                tauri::WindowEvent::Resumed => {
+                    if let Some(state) = window.try_state::<AppState>() {
+                        let engine = state.engine.clone();
+                        tauri::async_runtime::spawn(async move { engine.resume().await });
+                    }
                 }
+                // Going to the background: Android only lets the keep-alive
+                // service start while the app is still visible.
+                tauri::WindowEvent::Suspended => platform::sync_background(window.app_handle()),
+                _ => {}
             }
             #[cfg(desktop)]
             let _ = (window, event);
         })
         .setup(|app| {
             let state = build_state(app.handle())?;
-            let engine = state.engine.clone();
             app.manage(state);
             log::info!(
                 "NZAP {} started on {} ({})",
@@ -112,12 +130,13 @@ pub fn run() {
                 std::env::consts::OS,
                 std::env::consts::ARCH
             );
-            // Reconnect to runtimes that survived the last session.
-            tauri::async_runtime::spawn(async move { engine.resume().await });
+            // Secrets (Android), reconnecting runtimes, background keep-alive.
+            platform::start(app.handle());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             commands::app::app_info,
+            commands::app::app_set_theme,
             commands::app::open_url,
             commands::app::reveal_path,
             commands::app::open_log_dir,

@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use std::future::Future;
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 
 use nzap_core::runtime::Terminal;
@@ -25,7 +25,16 @@ pub struct AppState {
     login: Mutex<Option<AbortHandle>>,
     /// Test builds only: write URLs here instead of opening a browser.
     pub open_log: Option<std::path::PathBuf>,
+    /// Set once platform secrets are readable (Android loads them after
+    /// setup); until then the connection status would be wrong.
+    secrets_ready: tokio::sync::watch::Sender<bool>,
+    /// Runtimes the background keep-alive last reported (`usize::MAX`: unknown).
+    #[cfg_attr(desktop, allow(dead_code))]
+    background: AtomicUsize,
 }
+
+/// How long a status request waits for platform secrets before answering.
+const SECRETS_WAIT: std::time::Duration = std::time::Duration::from_secs(10);
 
 fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -40,7 +49,25 @@ impl AppState {
             next_terminal: AtomicU32::new(1),
             login: Mutex::new(None),
             open_log,
+            secrets_ready: tokio::sync::watch::channel(false).0,
+            background: AtomicUsize::new(0),
         }
+    }
+
+    pub fn mark_secrets_ready(&self) {
+        self.secrets_ready.send_replace(true);
+    }
+
+    /// Wait (briefly) until stored secrets have been loaded.
+    pub async fn wait_for_secrets(&self) {
+        let mut ready = self.secrets_ready.subscribe();
+        let _ = tokio::time::timeout(SECRETS_WAIT, ready.wait_for(|ready| *ready)).await;
+    }
+
+    /// Record the background keep-alive state; `true` when it changed.
+    #[cfg_attr(desktop, allow(dead_code))]
+    pub fn background_changed(&self, runtimes: usize) -> bool {
+        self.background.swap(runtimes, Ordering::Relaxed) != runtimes
     }
 
     /// Run `work` on its own task so the UI can cancel it by `stream_id`.
@@ -179,6 +206,32 @@ mod tests {
         assert_eq!(result.unwrap_err().code, ErrorCode::Cancelled);
         // Finished streams are forgotten.
         assert!(!state.cancel_stream("cell-1"));
+    }
+
+    #[tokio::test]
+    async fn secrets_readiness_releases_waiters() {
+        let dir = tempfile::tempdir().unwrap();
+        let state = std::sync::Arc::new(state(dir.path()));
+        let waiter = {
+            let state = state.clone();
+            tokio::spawn(async move { state.wait_for_secrets().await })
+        };
+        tokio::time::sleep(Duration::from_millis(20)).await;
+        assert!(!waiter.is_finished());
+        state.mark_secrets_ready();
+        tokio::time::timeout(Duration::from_secs(1), waiter).await.unwrap().unwrap();
+        // Later callers return at once.
+        tokio::time::timeout(Duration::from_millis(50), state.wait_for_secrets()).await.unwrap();
+    }
+
+    #[test]
+    fn background_changes_are_reported_once() {
+        let dir = tempfile::tempdir().unwrap();
+        let state = state(dir.path());
+        assert!(!state.background_changed(0));
+        assert!(state.background_changed(2));
+        assert!(!state.background_changed(2));
+        assert!(state.background_changed(0));
     }
 
     #[tokio::test]

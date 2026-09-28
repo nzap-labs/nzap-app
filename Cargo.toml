@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/nzap-core", "crates/nzap-mock-colab", "src-tauri"]
+members = ["crates/nzap-core", "crates/nzap-mock-colab", "plugins/nzap-mobile", "src-tauri"]
 
 [workspace.package]
 version = "0.1.0"

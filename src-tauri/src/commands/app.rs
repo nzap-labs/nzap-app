@@ -41,12 +41,18 @@ pub fn open_external(app: &AppHandle, state: &AppState, url: &str) -> nzap_core:
 }
 
 /// Open Google's consent page in the platform's sign-in browser.
-pub fn open_auth(app: &AppHandle, state: &AppState, url: &str) -> nzap_core::Result<()> {
+pub async fn open_auth(app: &AppHandle, state: &AppState, url: &str) -> nzap_core::Result<()> {
     check_external_url(url)?;
     if state.log_opened_url(url)? {
         return Ok(());
     }
-    platform::open_auth_url(app, url)
+    platform::open_auth_url(app, url).await
+}
+
+/// The UI's theme changed: keep the system bars readable over it.
+#[tauri::command]
+pub async fn app_set_theme(app: AppHandle, dark: bool) {
+    platform::set_system_bars(&app, dark).await;
 }
 
 /// Only `https://` leaves the app (plain `http://` to loopback is allowed in
@@ -127,7 +133,7 @@ pub fn settings_update(
     let background_change = patch.close_to_tray.is_some() || patch.keep_alive.is_some();
     state.engine.update_settings(patch)?;
     if background_change {
-        platform::sync_background(&app, &state);
+        platform::sync_background(&app);
     }
     Ok(settings_view(&state))
 }

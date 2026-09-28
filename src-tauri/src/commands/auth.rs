@@ -11,6 +11,7 @@ use crate::state::{AppState, CmdResult};
 
 #[tauri::command]
 pub async fn auth_status(state: State<'_, AppState>) -> CmdResult<ConnectionStatus> {
+    state.wait_for_secrets().await;
     Ok(state.engine.status().await)
 }
 
@@ -25,7 +26,7 @@ pub async fn auth_connect(
 ) -> CmdResult<GoogleUser> {
     let engine = state.engine.clone();
     let login = engine.auth.begin_loopback(login_hint.as_deref()).await?;
-    open_auth(&app, &state, &login.auth_url)?;
+    open_auth(&app, &state, &login.auth_url).await?;
     let task = tokio::spawn(async move {
         let user = engine.auth.finish_loopback(login, LOGIN_TIMEOUT).await?;
         engine.resume().await;
@@ -70,8 +71,10 @@ pub async fn auth_complete_remote(
 
 /// Release every runtime and forget the Google connection.
 #[tauri::command]
-pub async fn auth_disconnect(state: State<'_, AppState>) -> CmdResult<()> {
-    state.engine.disconnect().await.map_err(Into::into)
+pub async fn auth_disconnect(app: AppHandle, state: State<'_, AppState>) -> CmdResult<()> {
+    let outcome = state.engine.disconnect().await;
+    crate::platform::sync_background(&app);
+    outcome.map_err(Into::into)
 }
 
 #[tauri::command]

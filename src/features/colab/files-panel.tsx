@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button'
 import { useDialogs } from '@/components/dialogs'
 import { cn } from '@/lib/cn'
 import type { ColabFileEntry } from '@/types/colab'
+import { savedMessage } from '@/lib/platform'
 
 const TEXT_EXTENSIONS = [
   '.py',
@@ -102,7 +103,7 @@ export function FilesPanel({ sessionName }: { sessionName: string | null }) {
     download.mutate(
       { name: sessionName!, path: target },
       {
-        onSuccess: (saved) => saved && toast.success(`Saved to ${saved}.`),
+        onSuccess: (saved) => saved && toast.success(savedMessage(saved)),
         onError: () => toast.error('Could not download that file.'),
       },
     )
@@ -149,7 +150,7 @@ export function FilesPanel({ sessionName }: { sessionName: string | null }) {
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Breadcrumb path={listing.data?.path ?? path} onNavigate={navigate} />
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-3xl border border-ink px-4 text-sm font-medium transition-colors hover:bg-paper-soft">
             <Upload className="size-4" /> Upload
             <input

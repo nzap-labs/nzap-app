@@ -29,6 +29,18 @@ export function applyTheme(theme: Theme): void {
   current = theme
   document.documentElement.classList.toggle('dark', theme === 'dark')
   document.documentElement.style.colorScheme = theme
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute('content', theme === 'dark' ? '#0f0f0e' : '#f8f5ed')
+  syncSystemBars(theme)
+}
+
+/** Phones: status and navigation bar icons that stay readable. */
+function syncSystemBars(theme: Theme): void {
+  if (!('__TAURI_INTERNALS__' in window)) return
+  void import('@tauri-apps/api/core')
+    .then(({ invoke }) => invoke('app_set_theme', { dark: theme === 'dark' }))
+    .catch(() => undefined)
 }
 
 /** Called once before React mounts so there is no theme flash. */

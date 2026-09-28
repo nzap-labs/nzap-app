@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
 import type { ColabRunFileEvent } from '@/types/colab'
 import { Block, renderMimeBundle, type OutputBlock } from './output-view'
+import { savedMessage } from '@/lib/platform'
 
 const FIELD =
   'h-10 w-full rounded-2xl border border-ink bg-transparent px-4 text-sm outline-none placeholder:text-graphite/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink'
@@ -252,7 +253,7 @@ export function RunFilePanel({ sessionName }: { sessionName: string | null }) {
               size="sm"
               onClick={() =>
                 saveTextFile(result.filename!, JSON.stringify(result.notebook, null, 1))
-                  .then((path) => path && toast.success(`Saved to ${path}.`))
+                  .then((path) => path && toast.success(savedMessage(path)))
                   .catch((error: unknown) =>
                     toast.error(error instanceof Error ? error.message : 'Could not save.'),
                   )

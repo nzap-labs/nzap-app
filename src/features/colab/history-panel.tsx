@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useDialogs } from '@/components/dialogs'
 import { cn } from '@/lib/cn'
 import type { ColabHistoryEvent, ColabHistoryFormat } from '@/types/colab'
+import { savedMessage } from '@/lib/platform'
 
 const FORMATS: { id: ColabHistoryFormat; label: string }[] = [
   { id: 'ipynb', label: 'Notebook' },
@@ -45,7 +46,7 @@ export function HistoryPanel({ sessionName }: { sessionName: string }) {
                 exportHistory.mutate(
                   { name: sessionName, format: format.id },
                   {
-                    onSuccess: (path) => path && toast.success(`Saved to ${path}.`),
+                    onSuccess: (path) => path && toast.success(savedMessage(path)),
                     onError: (error) =>
                       toast.error(error instanceof Error ? error.message : 'Export failed.'),
                   },
@@ -71,7 +72,7 @@ export function HistoryPanel({ sessionName }: { sessionName: string }) {
             onClick={async () => {
               const confirmed = await dialogs.confirm({
                 title: 'Clear history?',
-                description: `Every recorded cell and operation of ${sessionName} is deleted from this computer.`,
+                description: `Every recorded cell and operation of ${sessionName} is deleted from this device.`,
                 confirmLabel: 'Clear',
                 danger: true,
               })

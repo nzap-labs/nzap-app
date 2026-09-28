@@ -534,7 +534,16 @@ export function installFakeEngine(): FakeControls {
     switch (cmd) {
       // -- app
       case 'app_info':
-        return { version: '0.1.0-preview', os: 'browser', arch: 'fake' }
+        // Touch devices (and Playwright's phone profiles) get the mobile wording.
+        return {
+          version: '0.1.0-preview',
+          os: 'browser',
+          arch: 'fake',
+          mobile: navigator.maxTouchPoints > 0,
+        }
+      case 'app_set_theme':
+      case 'app_minimize':
+        return null
       case 'open_url':
         s().opened.push(String(args.url))
         return null
@@ -1029,8 +1038,29 @@ export function installFakeEngine(): FakeControls {
       }
       case 'notebook_export':
         return `/Users/you/Downloads/${findNotebook(args.id).slug}.nzap.json`
-      case 'notebook_import':
-        return null
+      case 'notebook_import': {
+        let file: Json
+        try {
+          file = JSON.parse(String(args.text)) as Json
+        } catch {
+          fail('invalid_input', 'That is not an NZAP notebook file.')
+        }
+        if (file!.format !== 'nzap-notebook/1')
+          fail('invalid_input', `Unsupported notebook format '${String(file!.format)}'.`)
+        const taken = new Set(s().notebooks.map((entry) => entry.slug))
+        let slug = String(file!.slug || 'imported')
+        for (let n = 2; taken.has(slug); n++) slug = `${String(file!.slug)}-${n}`
+        return notebookView(
+          saveNotebook({
+            slug,
+            title: file!.title,
+            description: file!.description ?? '',
+            source: file!.source,
+            params: file!.params ?? [],
+          }),
+          true,
+        )
+      }
       case 'notebook_run': {
         const notebook = findNotebook(args.id)
         const target = session(args.session)

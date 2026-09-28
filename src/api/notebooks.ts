@@ -75,10 +75,11 @@ export function useExportNotebook() {
   })
 }
 
+/** Import a `.nzap.json` file's text (read with the system file chooser). */
 export function useImportNotebookFile() {
   const invalidate = useInvalidateNotebooks()
   return useMutation({
-    mutationFn: () => call<Notebook | null>('notebook_import'),
+    mutationFn: (text: string) => call<Notebook>('notebook_import', { text }),
     onSuccess: () => invalidate(),
   })
 }

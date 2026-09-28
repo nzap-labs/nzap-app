@@ -5,7 +5,7 @@ import { SidebarRevealButton } from './dashboard-shell'
 /** Consistent header for workspace sub-pages (profile, account, credits). */
 export function PageHeader({ title, actions }: { title: string; actions?: ReactNode }) {
   return (
-    <header className="flex items-center justify-between gap-2 px-4 py-3 md:px-6">
+    <header className="pt-safe flex shrink-0 items-center justify-between gap-2 px-4 py-3 md:px-6">
       <div className="flex min-w-0 items-center gap-1">
         <SidebarRevealButton>
           <Menu className="size-4" />

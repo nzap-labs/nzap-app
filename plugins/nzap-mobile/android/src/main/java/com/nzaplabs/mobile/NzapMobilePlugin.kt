@@ -253,6 +253,15 @@ class NzapMobilePlugin(private val activity: Activity) : Plugin(activity) {
     }
   }
 
+  /** The back button on the last page: background the app, never finish it. */
+  @Command
+  fun moveToBackground(invoke: Invoke) {
+    activity.runOnUiThread {
+      activity.moveTaskToBack(true)
+      invoke.resolve()
+    }
+  }
+
   companion object {
     /** NZAP's paper colour for the Custom Tab toolbar. */
     private const val PAPER = 0xFFF8F5ED.toInt()

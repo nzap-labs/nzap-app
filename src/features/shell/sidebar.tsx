@@ -157,7 +157,7 @@ export function Sidebar({ onClose }: { onClose: () => void }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname })
 
   return (
-    <aside className="flex h-full w-[300px] shrink-0 flex-col overflow-y-auto border-r border-line bg-paper scrollbar-thin">
+    <aside className="flex h-full w-full shrink-0 flex-col overflow-y-auto border-r border-line bg-paper scrollbar-thin">
       <div className="flex items-center justify-between p-4">
         <LogoWordmark />
         <div className="flex items-center gap-1">

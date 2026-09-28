@@ -121,7 +121,7 @@ export function RuntimeList({
         >
           <p className="font-medium">External runtimes</p>
           <p className="mt-1 text-sm text-graphite">
-            VMs your Google account holds that were created outside NZAP Engine.
+            VMs your Google account holds that were created outside NZAP.
           </p>
           <ul className="mt-4 space-y-3">
             {assignments.map((assignment) => (

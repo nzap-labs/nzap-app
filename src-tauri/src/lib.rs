@@ -137,6 +137,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::app::app_info,
             commands::app::app_set_theme,
+            commands::app::app_minimize,
             commands::app::open_url,
             commands::app::reveal_path,
             commands::app::open_log_dir,

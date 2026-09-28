@@ -49,6 +49,12 @@ pub async fn open_auth(app: &AppHandle, state: &AppState, url: &str) -> nzap_cor
     platform::open_auth_url(app, url).await
 }
 
+/// The Android back button on the last page: background the app.
+#[tauri::command]
+pub async fn app_minimize(app: AppHandle) {
+    platform::move_to_background(&app).await;
+}
+
 /// The UI's theme changed: keep the system bars readable over it.
 #[tauri::command]
 pub async fn app_set_theme(app: AppHandle, dark: bool) {

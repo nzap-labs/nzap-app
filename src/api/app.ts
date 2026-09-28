@@ -5,6 +5,8 @@ export interface AppInfo {
   version: string
   os: string
   arch: string
+  /** The Android / iOS app (not the desktop development build). */
+  mobile: boolean
 }
 
 export interface Settings {
@@ -60,6 +62,7 @@ export function useSetOAuthClient() {
   })
 }
 
+/** Open the log folder (desktop) or share the diagnostics log (phones). */
 export function openLogFolder(): Promise<void> {
   return call('open_log_dir')
 }

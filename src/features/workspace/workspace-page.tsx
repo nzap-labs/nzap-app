@@ -23,7 +23,7 @@ function TopLink({ label, href }: { label: string; href: string }) {
 export function WorkspacePage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="flex items-center justify-between gap-2 px-4 py-3">
+      <header className="pt-safe flex shrink-0 items-center justify-between gap-2 px-4 py-3">
         <div className="flex min-w-0 items-center gap-1">
           <SidebarRevealButton>
             <Menu className="size-4" />
@@ -36,7 +36,7 @@ export function WorkspacePage() {
         </div>
       </header>
 
-      <div className="scrollbar-thin flex min-h-0 flex-1 flex-col items-center overflow-y-auto px-4 pb-8 md:px-6">
+      <div className="scrollbar-thin flex min-h-0 flex-1 flex-col items-center overflow-y-auto px-4 pb-tabbar md:px-6">
         <div className="relative flex w-full max-w-3xl flex-1 flex-col items-center justify-center py-8 min-h-[min-content]">
           <SparkleIcon
             aria-hidden

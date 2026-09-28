@@ -126,6 +126,10 @@ class NzapMobilePlugin: Plugin, ASWebAuthenticationPresentationContextProviding 
     invoke.resolve()
   }
 
+  @objc public func moveToBackground(_ invoke: Invoke) throws {
+    invoke.resolve()
+  }
+
   @objc public func secretsLoad(_ invoke: Invoke) throws {
     invoke.reject("The iOS app keeps secrets in the Keychain through the engine.")
   }

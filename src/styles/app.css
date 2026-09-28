@@ -48,6 +48,14 @@
     -webkit-text-size-adjust: 100%;
   }
 
+  /* Phones: the platform's own 16px base; the desktop's 120% is for dense
+     desktop screens. Tablets (lg) keep the desktop layout and scale. */
+  @media (max-width: 1023px) {
+    html {
+      font-size: 100%;
+    }
+  }
+
   body {
     @apply bg-paper font-sans text-ink antialiased;
     font-feature-settings: 'ss03', 'ss04';
@@ -55,6 +63,24 @@
     transition:
       background-color 0.3s ease,
       color 0.3s ease;
+  }
+
+  /* Touch: no grey tap flash, no double-tap zoom delay, no rubber-band
+     scrolling of the whole app shell. */
+  html,
+  body {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    overscroll-behavior: none;
+  }
+
+  /* iOS zooms into inputs smaller than 16px when they get focus. */
+  @media (pointer: coarse) {
+    input,
+    textarea,
+    select {
+      font-size: max(16px, 1em);
+    }
   }
 
   ::selection {
@@ -77,6 +103,49 @@
 }
 
 @layer utilities {
+  /* Safe-area insets (notches, rounded corners, gesture bars). */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pl-safe {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .pr-safe {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Room for the bottom tab bar under the page content on phones. */
+  .pb-tabbar {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+
+  @media (min-width: 1024px) {
+    .pb-tabbar {
+      padding-bottom: 2.5rem;
+    }
+  }
+
+  .animate-sheet-in {
+    animation: sheet-in 0.22s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.2s ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-sheet-in,
+    .animate-fade-in {
+      animation: none;
+    }
+  }
+
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: var(--color-quiet-line) transparent;
@@ -94,5 +163,25 @@
 
   .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

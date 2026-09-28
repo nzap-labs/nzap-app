@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, FileUp, FolderOpen, Loader2, Rocket, Square } from 'lucide-react'
+import { Check, FileUp, FolderOpen, Loader2, Rocket, Share2, Square } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   colabConfigQuery,
@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
 import { errorMessage } from '@/lib/ipc'
+import { useIsMobileApp } from '@/lib/platform'
 import type { ColabJobEvent } from '@/types/colab'
 import { Block, renderMimeBundle, type OutputBlock } from './output-view'
 
@@ -39,6 +40,7 @@ let nextId = 1
  */
 export function JobsPanel() {
   const queryClient = useQueryClient()
+  const mobile = useIsMobileApp()
   const { data: status } = useQuery(colabStatusQuery)
   const { data: config } = useQuery(colabConfigQuery)
   const { data: quota } = useQuery({ ...colabQuotaQuery, enabled: Boolean(status?.connected) })
@@ -177,7 +179,7 @@ export function JobsPanel() {
       <p className="font-medium">Ephemeral job</p>
       <p className="mt-1 text-sm text-graphite">
         A fresh runtime runs one script like <span className="font-mono">python job.py ARGS</span>,
-        saves the files you name to your downloads folder, and is released — the desktop version of{' '}
+        brings back the files you name, and is released — NZAP's version of{' '}
         <span className="font-mono">colab run</span>.
       </p>
 
@@ -361,13 +363,20 @@ export function JobsPanel() {
                       variant="secondary"
                       size="sm"
                       title={file.savedTo}
+                      aria-label={`${mobile ? 'Share' : 'Show'} ${file.path}`}
                       onClick={() =>
                         revealPath(file.savedTo!).catch((error: unknown) =>
-                          toast.error(errorMessage(error, 'Could not show the file.')),
+                          toast.error(
+                            errorMessage(
+                              error,
+                              mobile ? 'Could not share the file.' : 'Could not show the file.',
+                            ),
+                          ),
                         )
                       }
                     >
-                      <FolderOpen className="size-4" /> {formatSize(file.size)}
+                      {mobile ? <Share2 className="size-4" /> : <FolderOpen className="size-4" />}{' '}
+                      {formatSize(file.size)}
                     </Button>
                   ) : (
                     <span className="text-graphite">skipped ({file.skipped})</span>

@@ -316,6 +316,19 @@ pub async fn set_system_bars(app: &AppHandle, dark: bool) {
     let _ = (app, dark);
 }
 
+/// Send the app to the background (Android back button on the last page).
+pub async fn move_to_background(app: &AppHandle) {
+    #[cfg(mobile)]
+    {
+        use tauri_plugin_nzap_mobile::NzapMobileExt;
+        if let Err(error) = app.nzap_mobile().move_to_background().await {
+            log::debug!("Move to background: {error}");
+        }
+    }
+    #[cfg(desktop)]
+    let _ = app;
+}
+
 /// Whether runtimes should be kept alive while the app is in the background:
 /// keep-alive on, "keep alive in the background" (the desktop's
 /// close-to-tray setting) on, and at least one runtime.

@@ -7,7 +7,7 @@ describe('SettingsPage', () => {
   it('turns keep-alive and close-to-tray on and off', async () => {
     const { user, engine } = renderWithEngine(<SettingsPage />)
     const keepAlive = await screen.findByRole('checkbox', {
-      name: 'Keep runtimes alive while NZAP Engine is open',
+      name: 'Keep runtimes alive while NZAP is open',
     })
     const tray = screen.getByRole('checkbox', {
       name: 'Keep running in the system tray when the window is closed',
@@ -16,7 +16,7 @@ describe('SettingsPage', () => {
 
     await user.click(tray)
     expect(
-      await screen.findByText('Closing the window now keeps NZAP Engine in the system tray.'),
+      await screen.findByText('Closing the window now keeps NZAP in the system tray.'),
     ).toBeInTheDocument()
     expect(engine.state.settings.closeToTray).toBe(true)
     await waitFor(() =>

@@ -1,8 +1,10 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Outlet } from '@tanstack/react-router'
+import { Outlet, useRouter } from '@tanstack/react-router'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Sidebar } from './sidebar'
+import { BottomNav } from './bottom-nav'
+import { useBackButton } from './back-button'
 import { cn } from '@/lib/cn'
 
 interface SidebarContextValue {
@@ -16,17 +18,37 @@ export function useSidebar() {
   return useContext(SidebarContext)
 }
 
+/** Tablets and desktops (Tailwind's `lg`) keep the sidebar open. */
+const WIDE = '(min-width: 1024px)'
+
+function isWide(): boolean {
+  return typeof window.matchMedia === 'function' && window.matchMedia(WIDE).matches
+}
+
 /**
- * App shell: sidebar + scrollable main area. Pages render
- * their own header row (model picker / page title) inside the main area.
+ * App shell: sidebar + scrollable main area, and on phones the bottom tab
+ * bar. Pages render their own header row inside the main area.
  *
- * The sidebar animates instead of unmounting: on desktop the wrapper's width
- * transitions (300px ↔ 0, clipping the aside); on mobile the aside is a fixed
- * drawer that slides via translate-x while the scrim fades.
+ * The sidebar animates instead of unmounting: on wide screens the wrapper's
+ * width transitions (300px ↔ 0, clipping the aside); on phones the aside is
+ * a fixed drawer that slides via translate-x while the scrim fades. Phones
+ * start with it closed and close it after every navigation.
  */
 export function DashboardShell() {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(isWide)
   const toggle = () => setOpen((current) => !current)
+  const router = useRouter()
+
+  // Phones: every navigation closes the drawer.
+  useEffect(
+    () =>
+      router.subscribe('onBeforeNavigate', () => {
+        if (!isWide()) setOpen(false)
+      }),
+    [router],
+  )
+
+  useBackButton({ drawerOpen: open && !isWide(), closeDrawer: () => setOpen(false) })
 
   return (
     <TooltipProvider>
@@ -36,19 +58,21 @@ export function DashboardShell() {
             aria-hidden
             onClick={() => setOpen(false)}
             className={cn(
-              'fixed inset-0 z-30 bg-black/50 transition-opacity duration-300 lg:hidden',
+              'fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 lg:hidden',
               open ? 'opacity-100' : 'pointer-events-none opacity-0',
             )}
           />
           <div
             className={cn(
-              'z-40 h-full shrink-0 overflow-hidden transition-[width] duration-300 ease-out',
+              'z-50 h-full shrink-0 overflow-hidden transition-[width] duration-300 ease-out',
               open ? 'w-0 lg:w-[300px]' : 'w-0',
             )}
           >
             <aside
+              aria-hidden={!open}
+              inert={!open}
               className={cn(
-                'h-full w-[300px] transition-transform duration-300 ease-out',
+                'pt-safe pb-safe h-full w-[300px] max-w-[85vw] bg-paper transition-transform duration-300 ease-out',
                 'fixed inset-y-0 left-0 lg:static',
                 open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
               )}
@@ -56,9 +80,10 @@ export function DashboardShell() {
               <Sidebar onClose={() => setOpen(false)} />
             </aside>
           </div>
-          <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <main className="pl-safe pr-safe flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
             <Outlet />
           </main>
+          <BottomNav />
         </div>
       </SidebarContext.Provider>
     </TooltipProvider>
@@ -74,7 +99,7 @@ export function SidebarRevealButton({ children }: { children: ReactNode }) {
       type="button"
       aria-label="Open sidebar"
       onClick={toggle}
-      className="cursor-pointer rounded-lg p-2 text-graphite transition-colors hover:bg-paper-soft hover:text-ink"
+      className="grid size-10 cursor-pointer place-items-center rounded-lg text-graphite transition-colors hover:bg-paper-soft hover:text-ink"
     >
       {children}
     </button>

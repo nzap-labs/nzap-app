@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   BookOpen,
   Copy,
@@ -27,6 +27,7 @@ import { useDialogs } from '@/components/dialogs'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
 import { errorMessage } from '@/lib/ipc'
+import { savedMessage } from '@/lib/platform'
 import type { CatalogStatus, Notebook } from '@/types/notebook'
 import { NotebookEditorDialog } from './notebook-editor-dialog'
 
@@ -63,6 +64,7 @@ export function NotebooksPanel({
   const refresh = useRefreshCatalog()
   const exportNotebook = useExportNotebook()
   const importFile = useImportNotebookFile()
+  const importInput = useRef<HTMLInputElement>(null)
   const dialogs = useDialogs()
 
   /** List entries carry no source; load the full notebook before editing. */
@@ -172,17 +174,34 @@ export function NotebooksPanel({
             <p className="font-medium">Your notebooks</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            {/* The system file chooser (files, Drive, …) reads the file here;
+                only its text crosses to the engine. */}
+            <input
+              ref={importInput}
+              type="file"
+              accept=".json,application/json"
+              hidden
+              aria-label="Notebook file to import"
+              onChange={async (event) => {
+                const file = event.target.files?.[0]
+                event.target.value = ''
+                if (!file) return
+                if (file.size > 20 * 1024 * 1024) {
+                  toast.error(`${file.name} is larger than 20 MB.`)
+                  return
+                }
+                importFile.mutate(await file.text(), {
+                  onSuccess: (notebook) => toast.success(`Imported ${notebook.title}.`),
+                  onError: (importError) =>
+                    toast.error(errorMessage(importError, 'Import failed.')),
+                })
+              }}
+            />
             <Button
               variant="ghost"
               size="sm"
               disabled={importFile.isPending}
-              onClick={() =>
-                importFile.mutate(undefined, {
-                  onSuccess: (notebook) => notebook && toast.success(`Imported ${notebook.title}.`),
-                  onError: (importError) =>
-                    toast.error(errorMessage(importError, 'Import failed.')),
-                })
-              }
+              onClick={() => importInput.current?.click()}
             >
               <FileUp className="size-4" /> Import
             </Button>
@@ -192,7 +211,7 @@ export function NotebooksPanel({
           </div>
         </div>
         <p className="mt-1 text-sm text-graphite">
-          Stored on this computer. Fork a public one or write your own — the editor opens with a
+          Stored on this device. Fork a public one or write your own — the editor opens with a
           starter script.
         </p>
         <ul className="mt-4 space-y-3">
@@ -206,7 +225,7 @@ export function NotebooksPanel({
               onEdit={() => void openEditor('edit', notebook)}
               onExport={() =>
                 exportNotebook.mutate(notebook.id, {
-                  onSuccess: (path) => path && toast.success(`Saved to ${path}.`),
+                  onSuccess: (path) => path && toast.success(savedMessage(path)),
                   onError: (exportError) =>
                     toast.error(errorMessage(exportError, 'Export failed.')),
                 })
@@ -214,7 +233,7 @@ export function NotebooksPanel({
               onDelete={async () => {
                 const confirmed = await dialogs.confirm({
                   title: `Delete ${notebook.title}?`,
-                  description: 'The notebook is removed from this computer.',
+                  description: 'The notebook is removed from this device.',
                   confirmLabel: 'Delete',
                   danger: true,
                 })

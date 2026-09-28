@@ -165,6 +165,14 @@ impl<R: Runtime> NzapMobile<R> {
             .await?;
         Ok(())
     }
+
+    /// Send the app to the background without finishing it (Android back
+    /// button on the last page), so runtimes stay kept alive.
+    pub async fn move_to_background(&self) -> Result<()> {
+        let _: serde_json::Value =
+            self.handle.run_mobile_plugin_async("moveToBackground", ()).await?;
+        Ok(())
+    }
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -191,6 +199,9 @@ impl<R: Runtime> NzapMobile<R> {
         Err(Error::Unsupported)
     }
     pub async fn set_system_bars(&self, _dark: bool) -> Result<()> {
+        Err(Error::Unsupported)
+    }
+    pub async fn move_to_background(&self) -> Result<()> {
         Err(Error::Unsupported)
     }
 }

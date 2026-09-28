@@ -123,7 +123,7 @@ export function NotebookEditorDialog({
         </DialogTitle>
         <DialogDescription>
           {mode === 'fork'
-            ? 'Creates a copy in your notebooks, stored on this computer. Tweak it before saving.'
+            ? 'Creates a copy in your notebooks, stored on this device. Tweak it before saving.'
             : 'Notebooks are private to you. Read the `params` dict in your code; NZAP injects it before the script runs.'}
         </DialogDescription>
 

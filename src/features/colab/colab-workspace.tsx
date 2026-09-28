@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Cpu, FileUp, FolderOpen, NotebookPen, SquareTerminal, Terminal } from 'lucide-react'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { colabSessionsQuery, colabStatusQuery } from '@/api/colab'
 import type { Notebook } from '@/types/notebook'
 import { PageHeader } from '@/features/shell/page-header'
@@ -20,17 +20,7 @@ import { JobsPanel } from './jobs-panel'
 import { TerminalPanel } from './terminal-panel'
 import { cn } from '@/lib/cn'
 import { Onboarding } from './onboarding'
-
-type Tab = 'runtimes' | 'console' | 'terminal' | 'run' | 'files' | 'notebooks'
-
-const TABS: { id: Tab; label: string; icon: typeof Cpu }[] = [
-  { id: 'runtimes', label: 'Runtimes', icon: Cpu },
-  { id: 'console', label: 'Console', icon: Terminal },
-  { id: 'terminal', label: 'Terminal', icon: SquareTerminal },
-  { id: 'run', label: 'Run', icon: FileUp },
-  { id: 'notebooks', label: 'Notebooks', icon: NotebookPen },
-  { id: 'files', label: 'Files', icon: FolderOpen },
-]
+import { DEFAULT_TAB, TABS, type Tab } from './workspace-tabs'
 
 /** Arrow keys, Home and End move between tabs (WAI-ARIA tabs pattern). */
 function tabAfterKey(current: Tab, key: string): Tab | null {
@@ -55,7 +45,9 @@ function tabAfterKey(current: Tab, key: string): Tab | null {
  * user's own token — no server in between.
  */
 export function ColabWorkspace() {
-  const [tab, setTab] = useState<Tab>('runtimes')
+  const tab = useSearch({ from: '/colab', select: (search) => search.tab ?? DEFAULT_TAB })
+  const navigate = useNavigate()
+  const setTab = (next: Tab) => void navigate({ to: '/colab', search: { tab: next } })
   const [activeName, setActiveName] = useState<string | null>(null)
   const [runNotebook, setRunNotebook] = useState<Notebook | null>(null)
 
@@ -73,7 +65,7 @@ export function ColabWorkspace() {
         actions={
           <div className="flex flex-wrap items-center justify-end gap-2">
             <ConsumptionChip enabled={Boolean(status?.connected)} />
-            <span className="flex items-center gap-2 rounded-full border border-ink px-3 py-1 text-xs font-medium">
+            <span className="hidden items-center gap-2 rounded-full border border-ink px-3 py-1 text-xs font-medium sm:flex">
               <span
                 aria-hidden
                 className={cn(
@@ -87,16 +79,21 @@ export function ColabWorkspace() {
         }
       />
 
-      <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-4 pb-10 md:px-6">
+      <div className="scrollbar-thin pb-tabbar min-h-0 flex-1 overflow-y-auto px-4 md:px-6">
         <div className="mx-auto w-full max-w-4xl space-y-6">
-          <ConnectionCard />
+          {/* Phones show the Google card only on Runtimes (or while signing in),
+              so each section starts at the top of the screen. */}
+          <div className={cn(status?.connected && tab !== 'runtimes' && 'hidden lg:block')}>
+            <ConnectionCard />
+          </div>
 
           {status && !status.connected ? (
             <Onboarding />
           ) : (
             <>
+              {/* Phones switch sections with the bottom tab bar instead. */}
               <div
-                className="flex flex-wrap gap-2"
+                className="hidden flex-wrap gap-2 lg:flex"
                 role="tablist"
                 aria-label="Colab workspace"
                 onKeyDown={(event) => {

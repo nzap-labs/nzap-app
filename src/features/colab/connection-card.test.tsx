@@ -15,7 +15,7 @@ describe('ConnectionCard', () => {
 
     await within(card).findByText('connected')
     expect(card).toHaveTextContent('Connected as ada@example.com')
-    expect(card).toHaveTextContent('in your system keychain')
+    expect(card).toHaveTextContent('in secure storage')
     // Plan details come from the normalised quota.
     expect(await within(card).findByText('36.0 free')).toBeInTheDocument()
   })

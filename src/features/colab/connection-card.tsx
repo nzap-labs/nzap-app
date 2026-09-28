@@ -83,10 +83,10 @@ export function ConnectionCard() {
           </div>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-graphite">
             {connected
-              ? `Connected as ${status?.email ?? 'your Google account'}. NZAP Engine uses this account to allocate Colab runtimes; the token stays on this computer${status?.storage === 'keychain' ? ', in your system keychain' : ''} and is refreshed automatically.`
+              ? `Connected as ${status?.email ?? 'your Google account'}. NZAP uses this account to allocate Colab runtimes; the token stays on this device${status?.storage === 'keychain' ? ', in secure storage' : ''} and is refreshed automatically.`
               : connect.isPending
                 ? 'Finish signing in in your browser — this window updates as soon as Google redirects back.'
-                : 'Connect a Google account to allocate Colab runtimes. NZAP Engine asks for the same Colab and Drive permissions the Colab notebook itself uses.'}
+                : 'Connect a Google account to allocate Colab runtimes. NZAP asks for the same Colab and Drive permissions the Colab notebook itself uses.'}
           </p>
           {connected && status?.warning && (
             <p className="mt-2 text-xs text-graphite">{status.warning}</p>
@@ -100,7 +100,7 @@ export function ConnectionCard() {
           )}
           {connected && status?.storage === 'file' && (
             <p className="mt-2 text-xs text-coral">
-              No system keychain was available, so the token is stored in a file only your user
+              No secure storage was available, so the token is stored in a file only your user
               account can read.
             </p>
           )}
@@ -117,9 +117,9 @@ export function ConnectionCard() {
               <DialogContent>
                 <DialogTitle>Disconnect Google Auth?</DialogTitle>
                 <DialogDescription>
-                  NZAP Engine releases every Colab runtime it is running, revokes its access to your
-                  Google account and forgets the stored token. Notebooks and files on Google Drive
-                  are not touched.
+                  NZAP releases every Colab runtime it is running, revokes its access to your Google
+                  account and forgets the stored token. Notebooks and files on Google Drive are not
+                  touched.
                 </DialogDescription>
                 <div className="mt-5 flex justify-end gap-2">
                   <DialogClose asChild>
@@ -174,7 +174,7 @@ export function ConnectionCard() {
 
 /**
  * The copy/paste fallback (google-colab-cli's remote flow) for when the
- * browser cannot reach this computer's loopback address.
+ * browser cannot reach this device's loopback address.
  */
 function RemoteConnectDialog() {
   const { begin, complete } = useRemoteConnect()
@@ -197,8 +197,8 @@ function RemoteConnectDialog() {
       <DialogContent>
         <DialogTitle>Connect with a code</DialogTitle>
         <DialogDescription>
-          Use this if the browser sign-in cannot finish (for example on a remote desktop). Google
-          shows a code after you approve access; paste it here.
+          Use this if the browser sign-in cannot finish (for example when the browser cannot return
+          to NZAP). Google shows a code after you approve access; paste it here.
         </DialogDescription>
         <div className="mt-4 space-y-3">
           <Button
@@ -272,7 +272,7 @@ function AccountSummary({ storage }: { storage?: string }) {
       <Fact
         icon={<CheckCircle2 className="size-4" />}
         label="Token"
-        value={storage === 'keychain' ? 'in system keychain' : 'verified with Colab'}
+        value={storage === 'keychain' ? 'in secure storage' : 'verified with Colab'}
       />
     </dl>
   )

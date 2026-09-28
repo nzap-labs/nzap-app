@@ -30,7 +30,7 @@ export function AccountPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <PageHeader title="Account" />
-      <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-4 pb-10 md:px-6">
+      <div className="scrollbar-thin pb-tabbar min-h-0 flex-1 overflow-y-auto px-4 md:px-6">
         <div className="mx-auto w-full max-w-3xl space-y-6">
           {user && (
             <section className="flex items-center gap-4 rounded-[24px] border border-ink bg-paper p-6">
@@ -105,7 +105,7 @@ export function AccountPage() {
                     )}
                     <Fact
                       icon={<Cpu />}
-                      label="Runtimes in NZAP Engine"
+                      label="Runtimes in NZAP"
                       value={String(sessions?.sessions.length ?? 0)}
                     />
                   </dl>
@@ -140,10 +140,10 @@ export function AccountPage() {
           <section aria-label="Privacy" className="rounded-[24px] border border-line bg-paper p-6">
             <p className="font-medium">Privacy</p>
             <p className="mt-1 text-sm leading-relaxed text-graphite">
-              NZAP Engine has no account and no server. Your Google token lives on this computer
-              {status?.storage === 'keychain' ? ' in the system keychain' : ''}, notebooks and
-              history stay in the app&apos;s data folder, and nothing is sent anywhere except to
-              Google and to GitHub for the public notebook collection.
+              NZAP has no account and no server. Your Google token lives on this device
+              {status?.storage === 'keychain' ? ' in secure storage' : ''}, notebooks and history
+              stay in the app&apos;s data folder, and nothing is sent anywhere except to Google and
+              to GitHub for the public notebook collection.
             </p>
             <ExternalLink
               href="https://myaccount.google.com/permissions"

@@ -17,7 +17,11 @@ function RootDocument() {
   return (
     <DialogsProvider>
       <DashboardShell />
-      <Toaster position="top-center" theme={theme} />
+      <Toaster
+        position="top-center"
+        theme={theme}
+        mobileOffset={{ top: 'calc(env(safe-area-inset-top) + 12px)' }}
+      />
     </DialogsProvider>
   )
 }
@@ -27,7 +31,7 @@ function NotFound() {
     <div className="flex min-h-full flex-1 flex-col items-center justify-center gap-5 p-6">
       <LogoMark className="size-12" />
       <p className="text-2xl font-medium tracking-tight">Page not found</p>
-      <p className="text-graphite">That page does not exist in NZAP Engine.</p>
+      <p className="text-graphite">That page does not exist in NZAP.</p>
       <Link
         to="/colab"
         className="rounded-3xl border border-ink px-6 py-3 font-medium transition-colors hover:bg-paper-soft"

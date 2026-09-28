@@ -21,7 +21,7 @@ const STEPS: { icon: ReactNode; title: string; body: string }[] = [
   {
     icon: <FolderOpen className="size-4" />,
     title: 'Stay in control',
-    body: 'No NZAP account and no server: your token never leaves this computer.',
+    body: 'No NZAP account and no server: your token never leaves this device.',
   },
 ]
 
@@ -33,10 +33,9 @@ export function Onboarding() {
       className="relative overflow-hidden rounded-[24px] border border-line bg-paper-soft p-6 md:p-8"
     >
       <SparkleIcon className="pointer-events-none absolute -right-10 -top-10 size-48 text-ink opacity-[0.05]" />
-      <p className="text-2xl font-medium tracking-tight">Your Colab runtimes, from your desktop.</p>
+      <p className="text-2xl font-medium tracking-tight">Your Colab runtimes, from your phone.</p>
       <p className="mt-2 max-w-xl text-sm leading-relaxed text-graphite">
-        Connect the Google account you use for Colab above. That is the only sign-in NZAP Engine
-        needs.
+        Connect the Google account you use for Colab above. That is the only sign-in NZAP needs.
       </p>
       <ul className="mt-6 grid gap-3 sm:grid-cols-2">
         {STEPS.map((step) => (

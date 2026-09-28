@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-import { FolderOpen, RotateCcw, Save } from 'lucide-react'
+import { FolderOpen, RotateCcw, Save, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   appInfoQuery,
@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PageHeader } from '@/features/shell/page-header'
 import { errorMessage } from '@/lib/ipc'
+import { useIsMobileApp } from '@/lib/platform'
 
 /** Engine settings: keep-alive, the notebook catalog, artifacts, OAuth client. */
 export function SettingsPage() {
@@ -35,6 +36,7 @@ export function SettingsPage() {
 
 function SettingsForm({ view }: { view: SettingsView }) {
   const { data: info } = useQuery(appInfoQuery)
+  const mobile = useIsMobileApp()
   const update = useUpdateSettings()
   const setClient = useSetOAuthClient()
   const settings = view.settings
@@ -54,11 +56,15 @@ function SettingsForm({ view }: { view: SettingsView }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <PageHeader title="Settings" />
-      <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-4 pb-10 md:px-6">
+      <div className="scrollbar-thin pb-tabbar min-h-0 flex-1 overflow-y-auto px-4 md:px-6">
         <div className="mx-auto w-full max-w-3xl space-y-6">
           <Card
             title="Keep-alive"
-            description="Ping every runtime so Colab does not stop it for being idle (for at most 24 hours, like the Colab CLI)."
+            description={
+              mobile
+                ? 'Ping every runtime so Colab does not stop it for being idle (for at most 24 hours, like the Colab CLI). In the background, Android shows a notification while NZAP does this; iOS pauses apps in the background, so NZAP checks your runtimes again when you come back.'
+                : 'Ping every runtime so Colab does not stop it for being idle (for at most 24 hours, like the Colab CLI).'
+            }
           >
             <label className="flex items-center gap-2.5 text-sm">
               <input
@@ -67,7 +73,7 @@ function SettingsForm({ view }: { view: SettingsView }) {
                 onChange={(event) => save({ keepAlive: event.target.checked })}
                 className="size-4 accent-[var(--color-ink)]"
               />
-              Keep runtimes alive while NZAP Engine is open
+              Keep runtimes alive while NZAP is open
             </label>
             <label className="mt-3 flex items-center gap-2.5 text-sm">
               <input
@@ -76,14 +82,20 @@ function SettingsForm({ view }: { view: SettingsView }) {
                 onChange={(event) =>
                   save(
                     { closeToTray: event.target.checked },
-                    event.target.checked
-                      ? 'Closing the window now keeps NZAP Engine in the system tray.'
-                      : 'Closing the window now quits NZAP Engine.',
+                    mobile
+                      ? event.target.checked
+                        ? 'Runtimes now stay alive while NZAP is in the background.'
+                        : 'Runtimes are now kept alive only while NZAP is open.'
+                      : event.target.checked
+                        ? 'Closing the window now keeps NZAP in the system tray.'
+                        : 'Closing the window now quits NZAP.',
                   )
                 }
                 className="size-4 accent-[var(--color-ink)]"
               />
-              Keep running in the system tray when the window is closed
+              {mobile
+                ? 'Keep runtimes alive in the background'
+                : 'Keep running in the system tray when the window is closed'}
             </label>
             <form
               className="mt-4 flex flex-wrap items-end gap-2"
@@ -142,33 +154,36 @@ function SettingsForm({ view }: { view: SettingsView }) {
             </form>
           </Card>
 
-          <Card
-            title="Job artifacts"
-            description="Files returned by ephemeral jobs are saved here, in a folder per job. Leave empty for your Downloads folder."
-          >
-            <form
-              className="flex flex-wrap gap-2"
-              onSubmit={(event) => {
-                event.preventDefault()
-                save({ artifactsDir })
-              }}
+          {/* Phones keep artifacts in the app and share them from the job. */}
+          {!mobile && (
+            <Card
+              title="Job artifacts"
+              description="Files returned by ephemeral jobs are saved here, in a folder per job. Leave empty for your Downloads folder."
             >
-              <Input
-                value={artifactsDir}
-                onChange={(event) => setArtifactsDir(event.target.value)}
-                placeholder="Downloads/NZAP Engine"
-                aria-label="Artifacts folder"
-                className="min-w-0 flex-1 font-mono text-sm"
-              />
-              <Button type="submit" variant="secondary" size="sm" disabled={update.isPending}>
-                <Save className="size-4" /> Save
-              </Button>
-            </form>
-          </Card>
+              <form
+                className="flex flex-wrap gap-2"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  save({ artifactsDir })
+                }}
+              >
+                <Input
+                  value={artifactsDir}
+                  onChange={(event) => setArtifactsDir(event.target.value)}
+                  placeholder="Downloads/NZAP"
+                  aria-label="Artifacts folder"
+                  className="min-w-0 flex-1 font-mono text-sm"
+                />
+                <Button type="submit" variant="secondary" size="sm" disabled={update.isPending}>
+                  <Save className="size-4" /> Save
+                </Button>
+              </form>
+            </Card>
+          )}
 
           <Card
             title="Google OAuth client"
-            description="NZAP Engine signs in with the installed-app client that Google's own Colab CLI uses. You can use your own Desktop OAuth client instead — disconnect Google first."
+            description="NZAP signs in with the installed-app client that Google's own Colab CLI uses. You can use your own Desktop OAuth client instead — disconnect Google first."
           >
             <p className="text-sm">
               Current client:{' '}
@@ -221,10 +236,7 @@ function SettingsForm({ view }: { view: SettingsView }) {
             </div>
           </Card>
 
-          <Card
-            title="About"
-            description="NZAP Engine is open source under the Apache-2.0 license."
-          >
+          <Card title="About" description="NZAP is open source under the Apache-2.0 license.">
             <dl className="grid gap-2 text-sm sm:grid-cols-2">
               <div>
                 <dt className="text-xs text-graphite">Version</dt>
@@ -241,14 +253,27 @@ function SettingsForm({ view }: { view: SettingsView }) {
                 size="sm"
                 onClick={() =>
                   openLogFolder().catch((error: unknown) =>
-                    toast.error(errorMessage(error, 'Could not open the log folder.')),
+                    toast.error(
+                      errorMessage(
+                        error,
+                        mobile ? 'Could not share the log.' : 'Could not open the log folder.',
+                      ),
+                    ),
                   )
                 }
               >
-                <FolderOpen className="size-4" /> Open log folder
+                {mobile ? (
+                  <>
+                    <Share2 className="size-4" /> Share diagnostics log
+                  </>
+                ) : (
+                  <>
+                    <FolderOpen className="size-4" /> Open log folder
+                  </>
+                )}
               </Button>
               <ExternalLink
-                href="https://github.com/nzap-labs/nzap-engine/issues/new/choose"
+                href="https://github.com/nzap-labs/nzap-app/issues/new/choose"
                 className="inline-flex h-9 items-center rounded-3xl px-4 text-sm font-medium transition-colors hover:bg-paper-soft"
               >
                 Report an issue
@@ -271,7 +296,7 @@ function Card({
   children: ReactNode
 }) {
   return (
-    <section aria-label={title} className="rounded-[24px] border border-ink bg-paper p-6">
+    <section aria-label={title} className="rounded-[24px] border border-ink bg-paper p-5 sm:p-6">
       <p className="font-medium">{title}</p>
       <p className="mt-1 text-sm leading-relaxed text-graphite">{description}</p>
       <div className="mt-4">{children}</div>

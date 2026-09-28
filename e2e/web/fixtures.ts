@@ -1,7 +1,9 @@
 import { test as base, expect, type Page } from '@playwright/test'
 import type { FakeState } from '../../src/dev/fake-engine'
 
-type Preset = Partial<Pick<FakeState, 'connected' | 'driveConsent' | 'delay' | 'failNextCreate'>>
+type Preset = Partial<
+  Pick<FakeState, 'connected' | 'driveConsent' | 'delay' | 'failNextCreate' | 'mobile'>
+>
 
 /** Open the app with the simulated engine in a given starting state. */
 export async function openApp(page: Page, preset: Preset = {}, path = '/') {

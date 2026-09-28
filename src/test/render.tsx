@@ -17,7 +17,8 @@ export function renderWithEngine(
   prepare?: (state: FakeState) => void,
 ) {
   const engine = installFakeEngine()
-  engine.reset({ delay: 1, ...state })
+  // Desktop wording unless a test asks for the phone app.
+  engine.reset({ delay: 1, mobile: false, ...state })
   prepare?.(engine.state)
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: 0 }, mutations: { retry: false } },

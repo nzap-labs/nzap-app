@@ -1,7 +1,12 @@
 import type { Page } from '@playwright/test'
-import { expect, fake, openApp, test } from '../web/fixtures'
+import { expect, fake, openApp as openWebApp, test } from '../web/fixtures'
 
-export { expect, fake, openApp, test }
+export { expect, fake, test }
+
+/** Open the app as the phone app (the simulated engine answers like Android). */
+export function openApp(page: Page, preset: Parameters<typeof openWebApp>[1] = {}, path = '/') {
+  return openWebApp(page, { mobile: true, ...preset }, path)
+}
 
 type PrimarySection = 'Runtimes' | 'Console' | 'Terminal' | 'Files'
 type MoreSection = 'Run & jobs' | 'Notebooks' | 'Account' | 'Settings' | 'Chat'

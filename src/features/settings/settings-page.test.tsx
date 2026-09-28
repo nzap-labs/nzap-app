@@ -32,6 +32,22 @@ describe('SettingsPage', () => {
     await waitFor(() => expect(engine.state.settings.keepAlive).toBe(!wasOn))
   })
 
+  it('uses the phone wording in the mobile app', async () => {
+    const { user, engine } = renderWithEngine(<SettingsPage />, { mobile: true })
+    const background = await screen.findByRole('checkbox', {
+      name: 'Keep runtimes alive in the background',
+    })
+    await user.click(background)
+    expect(
+      await screen.findByText('Runtimes now stay alive while NZAP is in the background.'),
+    ).toBeInTheDocument()
+    expect(engine.state.settings.closeToTray).toBe(true)
+    // Artifacts stay in the app; the log is shared rather than opened.
+    expect(screen.queryByRole('region', { name: 'Job artifacts' })).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Share diagnostics log' }))
+    expect(engine.state.shared).toContain('nzap.log')
+  })
+
   it('rejects a catalog URL that is not https', async () => {
     const { user, engine } = renderWithEngine(<SettingsPage />)
     const field = await screen.findByRole('textbox', { name: 'Catalog URL' })

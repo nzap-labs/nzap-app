@@ -13,6 +13,7 @@
  * VITE_FAKE_ENGINE).
  */
 import { mockIPC } from '@tauri-apps/api/mocks'
+import { isTouchDevice } from '@/lib/platform'
 import type { Channel } from '@tauri-apps/api/core'
 import bundledCatalog from '../../crates/nzap-core/catalog/bundled.json'
 
@@ -81,6 +82,8 @@ export interface FakeState {
   saved: { filename: string; content: string }[]
   /** Files handed to the share sheet / file manager (`reveal_path`, logs). */
   shared: string[]
+  /** Answer like the phone app (defaults to "is this a touch device?"). */
+  mobile: boolean
 }
 
 export interface FakeControls {
@@ -143,12 +146,8 @@ function initialState(): FakeState {
     calls: [],
     saved: [],
     shared: [],
+    mobile: isTouchDevice(),
   }
-}
-
-/** Phones (touch devices) save through a picker and report the file name. */
-function savedAs(filename: string): string {
-  return navigator.maxTouchPoints > 0 ? filename : `/Users/you/Downloads/${filename}`
 }
 
 class Failure {
@@ -183,6 +182,8 @@ export function installFakeEngine(): FakeControls {
   }
   window.__NZAP_FAKE__ = controls
   const s = () => controls.state
+  /** Phones save through a picker and report the file name. */
+  const savedAs = (filename: string) => (s().mobile ? filename : `/Users/you/Downloads/${filename}`)
 
   // ------------------------------------------------------------ plumbing
 
@@ -547,7 +548,7 @@ export function installFakeEngine(): FakeControls {
           version: '0.1.0-preview',
           os: 'browser',
           arch: 'fake',
-          mobile: navigator.maxTouchPoints > 0,
+          mobile: s().mobile,
         }
       case 'app_set_theme':
       case 'app_minimize':

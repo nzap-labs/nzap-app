@@ -60,9 +60,12 @@ test.describe('Phone workspace', () => {
 
     await files.getByRole('button', { name: 'Rename photo.jpg' }).tap()
     const rename = page.getByRole('dialog', { name: 'Rename photo.jpg' })
-    // Dialogs are bottom sheets on phones.
-    const box = (await rename.boundingBox())!
-    expect(Math.round(box.y + box.height)).toBeGreaterThanOrEqual(page.viewportSize()!.height - 1)
+    // Dialogs are bottom sheets on phones (centred from 640 px, e.g. tablets).
+    const viewport = page.viewportSize()!
+    if (viewport.width < 640) {
+      const box = (await rename.boundingBox())!
+      expect(Math.round(box.y + box.height)).toBeGreaterThanOrEqual(viewport.height - 1)
+    }
     await rename.getByRole('textbox').fill('cat.jpg')
     await rename.getByRole('button', { name: 'OK' }).tap()
     await expect(files.getByRole('button', { name: /^cat\.jpg/ })).toBeVisible()

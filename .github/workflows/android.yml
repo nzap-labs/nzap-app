@@ -102,6 +102,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The emulator's userdata partition needs ~7.5 GB on top of the Rust,
+      # NDK and Gradle builds; drop toolchains this job never uses.
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/share/swift \
+            /usr/local/share/powershell /opt/hostedtoolcache/CodeQL /opt/microsoft /opt/google/chrome
+          # Preinstalled NDKs (the pinned one is installed below).
+          sudo rm -rf "$ANDROID_HOME"/ndk/*
+          sudo docker image prune --all --force > /dev/null 2>&1 || true
+          df -h /
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -140,6 +152,11 @@ jobs:
 
       - name: Build the mock Google
         run: cargo build --release --locked -p nzap-mock-colab --bin mock-colab
+
+      - name: Make room for the emulator
+        run: |
+          rm -rf src-tauri/gen/android/app/build/intermediates src-tauri/gen/android/app/build/tmp
+          df -h /
 
       - name: Enable KVM
         run: |

@@ -12,6 +12,18 @@ export function useIsMobileApp(): boolean {
   return data?.mobile ?? false
 }
 
+/**
+ * A touch screen (phones, tablets). `maxTouchPoints` alone misses some
+ * WebKit builds, so touch events and a coarse pointer count too.
+ */
+export function isTouchDevice(): boolean {
+  return (
+    navigator.maxTouchPoints > 0 ||
+    'ontouchstart' in window ||
+    (typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches)
+  )
+}
+
 /** The toast after a save: a full path on desktop, a file name on phones. */
 export function savedMessage(saved: string): string {
   return /[/\\]/.test(saved) ? `Saved to ${saved}.` : `Saved ${saved}.`

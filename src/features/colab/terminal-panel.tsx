@@ -6,6 +6,7 @@ import '@xterm/xterm/css/xterm.css'
 import { openTerminal, type TerminalConnection } from '@/api/colab'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
+import { isTouchDevice } from '@/lib/platform'
 
 type State = 'connecting' | 'open' | 'closed'
 
@@ -60,6 +61,7 @@ export function TerminalPanel({ sessionName }: { sessionName: string | null }) {
     setModifierState(next)
   }
   const sendRef = useRef<(data: string) => void>(() => {})
+  const [touch] = useState(isTouchDevice)
 
   useEffect(() => {
     if (!sessionName || !host.current) return
@@ -184,7 +186,11 @@ export function TerminalPanel({ sessionName }: { sessionName: string | null }) {
       <div
         role="toolbar"
         aria-label="Terminal keys"
-        className="scrollbar-thin mt-3 flex gap-1.5 overflow-x-auto pb-1 pointer-fine:hidden"
+        className={cn(
+          'scrollbar-thin mt-3 flex gap-1.5 overflow-x-auto pb-1',
+          // Phones and portrait tablets always; wider screens only with touch.
+          !touch && 'lg:hidden',
+        )}
       >
         {KEYS.map((key) => {
           const active = key.modifier ? modifiers.has(key.modifier) : false

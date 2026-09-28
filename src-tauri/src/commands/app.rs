@@ -46,6 +46,13 @@ pub async fn open_auth(app: &AppHandle, state: &AppState, url: &str) -> nzap_cor
     if state.log_opened_url(url)? {
         return Ok(());
     }
+    #[cfg(feature = "e2e")]
+    {
+        let _ = app;
+        crate::e2e::play_browser(url.to_owned());
+        Ok(())
+    }
+    #[cfg(not(feature = "e2e"))]
     platform::open_auth_url(app, url).await
 }
 
@@ -67,7 +74,9 @@ pub fn check_external_url(url: &str) -> nzap_core::Result<()> {
     let parsed = url::Url::parse(url).map_err(|_| Error::invalid("That is not a valid link."))?;
     let loopback = matches!(parsed.host_str(), Some("127.0.0.1" | "localhost"));
     let allowed = parsed.scheme() == "https"
-        || (cfg!(debug_assertions) && loopback && parsed.scheme() == "http");
+        || ((cfg!(debug_assertions) || cfg!(feature = "e2e"))
+            && loopback
+            && parsed.scheme() == "http");
     if allowed {
         Ok(())
     } else {

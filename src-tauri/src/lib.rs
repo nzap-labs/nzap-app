@@ -6,13 +6,14 @@
 //! `crates/nzap-core` so it can be tested without a device.
 
 mod commands;
+#[cfg(feature = "e2e")]
+mod e2e;
 pub mod platform;
 mod state;
 
 use std::path::{Path, PathBuf};
 
 use nzap_core::auth::OAuthClient;
-use nzap_core::config::Endpoints;
 use nzap_core::paths::AppPaths;
 use nzap_core::settings::SettingsPatch;
 use nzap_core::{Engine, EngineOptions};
@@ -40,10 +41,13 @@ fn build_state(app: &AppHandle) -> Result<AppState, Box<dyn std::error::Error>> 
             cache_dir: app.path().app_cache_dir()?,
         },
     };
+    #[cfg(feature = "e2e")]
+    let endpoints = e2e::endpoints();
+    #[cfg(not(feature = "e2e"))]
     let endpoints = if cfg!(debug_assertions) {
-        Endpoints::default().with_overrides(dev_env)
+        nzap_core::config::Endpoints::default().with_overrides(dev_env)
     } else {
-        Endpoints::default()
+        nzap_core::config::Endpoints::default()
     };
     let oauth_client = std::env::var("NZAP_OAUTH_CLIENT_JSON").ok().and_then(|json| {
         OAuthClient::from_json(&json)
@@ -124,6 +128,8 @@ pub fn run() {
         .setup(|app| {
             let state = build_state(app.handle())?;
             app.manage(state);
+            #[cfg(feature = "e2e")]
+            log::warn!("{}: Google is {} (test build)", e2e::MARKER, e2e::MOCK_GOOGLE);
             log::info!(
                 "NZAP {} started on {} ({})",
                 nzap_core::VERSION,

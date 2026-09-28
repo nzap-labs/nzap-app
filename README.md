@@ -52,6 +52,19 @@ NZAP (one app)
                                         your runtimes, Drive, GitHub
 ```
 
+## Documentation
+
+| Guide                                           | For                                                |
+| ----------------------------------------------- | -------------------------------------------------- |
+| [INSTALL.md](./docs/INSTALL.md)                 | installing on Android and iOS, where data lives    |
+| [OAUTH.md](./docs/OAUTH.md)                     | how sign-in works, using your own OAuth client     |
+| [ARCHITECTURE.md](./docs/ARCHITECTURE.md)       | how the pieces fit, platform integration, IPC      |
+| [TESTING.md](./docs/TESTING.md)                 | the test suites and the live checklist             |
+| [RELEASING.md](./docs/RELEASING.md)             | tagging releases, Android signing, R8, iOS signing |
+| [TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md) | common problems                                    |
+| [SECURITY.md](./SECURITY.md)                    | threat model and reporting vulnerabilities         |
+| [VENDORED.md](./VENDORED.md)                    | code shared with NZAP Engine and how to re-sync it |
+
 ## Development
 
 Prerequisites: Node 22+, Rust stable, and for device builds the

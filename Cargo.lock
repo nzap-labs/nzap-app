@@ -2568,6 +2568,7 @@ dependencies = [
 name = "nzap-app"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "log",
  "nzap-core",
  "percent-encoding",

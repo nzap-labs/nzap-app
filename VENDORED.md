@@ -27,6 +27,14 @@ re-sync can find and replay it. They are listed here as they land:
   Keystore / Keychain store) and `EngineOptions::return_url`.
 - `crates/nzap-core/tests/engine.rs`: the new options, and a test that a platform
   store holds the connection.
+- `crates/nzap-core/src/auth/manager.rs`: `AuthManager::reload_secrets` (Android
+  Keystore secrets load after startup), with a test in `tests/auth_flow.rs`.
+- `src/`: the phone shell (`features/shell/bottom-nav.tsx`, `back-button.ts`,
+  `components/ui/sheet.tsx`), route-driven workspace tabs
+  (`features/colab/workspace-tabs.ts`), the terminal key bar, bottom-sheet
+  dialogs, safe areas, platform wording (`lib/platform.ts`), notebook import from
+  file text, and the simulated engine's phone behaviour.
+- `e2e/web/console.spec.ts`: an exact match for `42` (it matched timestamps).
 - `Cargo.toml`: the workspace `nzap-core` dependency has `default-features = false`
   (no desktop keychain on mobile).
 

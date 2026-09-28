@@ -69,6 +69,12 @@ jobs:
       - name: Verify the release artefacts
         run: scripts/verify-android-release.sh src-tauri/gen/android/app/build
 
+      # The native plugin's JVM unit tests (the Keystore envelope format).
+      # tauri.settings.gradle, written by the build above, includes it.
+      - name: Plugin unit tests
+        working-directory: src-tauri/gen/android
+        run: ./gradlew --no-daemon :tauri-plugin-nzap-mobile:testReleaseUnitTest
+
       - uses: actions/upload-artifact@v4
         with:
           name: nzap-android-release

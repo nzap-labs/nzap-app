@@ -9,6 +9,7 @@ mod commands;
 #[cfg(feature = "e2e")]
 mod e2e;
 pub mod platform;
+mod redact;
 mod state;
 
 use std::path::{Path, PathBuf};
@@ -81,6 +82,16 @@ fn log_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
         // Logcat on Android, the unified log on iOS, stdout on desktop.
         .target(Target::new(TargetKind::Stdout))
         .target(Target::new(TargetKind::LogDir { file_name: Some(platform::LOG_FILE_NAME.into()) }))
+        // Every line is redacted: users share this log from their phones.
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "{} {:<5} {}: {}",
+                chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f"),
+                record.level(),
+                record.target(),
+                redact::redact(&message.to_string())
+            ))
+        })
         .level(log::LevelFilter::Info)
         // Chatty dependencies stay at warnings.
         .level_for("hyper", log::LevelFilter::Warn)

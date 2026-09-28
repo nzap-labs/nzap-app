@@ -28,6 +28,7 @@ e2e = ["tauri/devtools"]
 tauri-build = { version = "2.7", features = [] }
 
 [dependencies]
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 log = "0.4"
 # The platform secret store replaces the desktop keychain.
 nzap-core = { workspace = true, default-features = false }

@@ -11,7 +11,7 @@ test.describe('Phone workspace', () => {
     await expect(page.getByRole('region', { name: 'Google Auth' })).toBeHidden()
     await page.getByLabel('Code').fill('print("hello from the phone")')
     await page.getByRole('button', { name: 'Run cell' }).tap()
-    await expect(page.getByText('hello from the phone')).toBeVisible()
+    await expect(page.getByText('hello from the phone', { exact: true })).toBeVisible()
 
     await page.getByLabel('Code').fill('name = input("Name? ")')
     await page.getByRole('button', { name: 'Run cell' }).tap()

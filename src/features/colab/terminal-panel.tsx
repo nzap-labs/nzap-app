@@ -201,7 +201,10 @@ export function TerminalPanel({ sessionName }: { sessionName: string | null }) {
               aria-label={key.aria}
               aria-pressed={key.modifier ? active : undefined}
               disabled={state !== 'open'}
-              onPointerDown={(event) => event.preventDefault()}
+              // Mouse: keep the focus on the terminal. Touch: a prevented
+              // pointerdown would swallow the tap in WebKit, so the terminal
+              // takes the focus back after the key instead.
+              onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
                 if (key.modifier) {
                   const next = new Set(modifiers)
@@ -211,6 +214,7 @@ export function TerminalPanel({ sessionName }: { sessionName: string | null }) {
                 } else if (key.data) {
                   sendRef.current(key.data)
                 }
+                host.current?.querySelector<HTMLElement>('.xterm-helper-textarea')?.focus()
               }}
               className={cn(
                 'h-10 min-w-11 shrink-0 cursor-pointer rounded-xl border px-3 font-mono text-sm transition-colors disabled:opacity-40',

@@ -73,7 +73,7 @@ jobs:
       # tauri.settings.gradle, written by the build above, includes it.
       - name: Plugin unit tests
         working-directory: src-tauri/gen/android
-        run: ./gradlew --no-daemon :tauri-plugin-nzap-mobile:testReleaseUnitTest
+        run: ./gradlew --no-daemon :tauri-plugin-nzap-mobile:testDebugUnitTest
 
       - uses: actions/upload-artifact@v4
         with:

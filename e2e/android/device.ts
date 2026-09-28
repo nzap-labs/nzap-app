@@ -22,10 +22,26 @@ export async function launchApp({ restart = true } = {}): Promise<Page> {
   const phone = await theDevice()
   if (restart) await phone.shell(`am force-stop ${PACKAGE}`)
   await phone.shell(`am start -W -n ${ACTIVITY}`)
-  const webView = await phone.webView({ pkg: PACKAGE }, { timeout: 60_000 })
+  // Attach to this process's WebView by its devtools socket: after a restart
+  // Playwright may still list the previous process's (dead) WebView.
+  const pid = await waitForPid()
+  const webView = await phone.webView(
+    { socketName: `webview_devtools_remote_${pid}` },
+    { timeout: 60_000 },
+  )
   const page = await webView.page()
   await page.waitForLoadState('domcontentloaded')
   return page
+}
+
+async function waitForPid(): Promise<string> {
+  const phone = await theDevice()
+  for (let attempt = 0; attempt < 60; attempt++) {
+    const pid = (await phone.shell(`pidof ${PACKAGE}`)).toString().trim().split(/\s+/)[0]
+    if (pid) return pid
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  }
+  throw new Error(`${PACKAGE} did not start`)
 }
 
 /** Is the app's process alive (no crash)? */

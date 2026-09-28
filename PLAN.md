@@ -202,52 +202,58 @@ Each phase ends with a commit and a push, and CI green on the branch.
 
 ### Phase 1 — Mobile engine & Tauri mobile shell
 
-- [ ] `nzap-core`: pluggable `SecretStore`, keychain feature off on mobile, deep-link return on the loopback success page
-- [ ] `src-tauri`: mobile entry point, every desktop command ported (desktop-only ones replaced), mobile config and CSP
-- [ ] `gen/android` committed: app id, icons, theme, edge-to-edge, R8 release config and keep rules, ABI splits
-- [ ] CI: Android release build (4 ABIs, R8) with APK + mapping artifacts
+- [x] `nzap-core`: pluggable `SecretStore`, keychain feature off on mobile, deep-link return on the loopback success page
+- [x] `src-tauri`: mobile entry point, every desktop command ported (desktop-only ones replaced), mobile config and CSP
+- [x] `gen/android` committed: app id, icons, theme, edge-to-edge, R8 release config and keep rules, ABI splits
+- [x] CI: Android release build (4 ABIs, R8) with APK + mapping artifacts
 
 ### Phase 2 — Native plugin
 
-- [ ] `plugins/nzap-mobile`: Kotlin + Swift + Rust bindings
-- [ ] Secure storage (Android Keystore / iOS Keychain) wired as the engine's secret store
-- [ ] Auth session (Custom Tabs / ASWebAuthenticationSession) + `nzap://` return
-- [ ] Save to… and share sheet for downloads, exports, artifacts and logs
-- [ ] Keep-alive foreground service + notification permission
-- [ ] Plugin unit tests (JVM) and Rust tests
+- [x] `plugins/nzap-mobile`: Kotlin + Swift + Rust bindings
+- [x] Secure storage (Android Keystore / iOS Keychain) wired as the engine's secret store
+- [x] Auth session (Custom Tabs / ASWebAuthenticationSession) + `nzap://` return
+- [x] Save to… and share sheet for downloads, exports, artifacts and logs
+- [x] Keep-alive foreground service + notification permission
+- [x] Plugin unit tests (JVM) and Rust tests
 
 ### Phase 3 — Mobile UI
 
-- [ ] Mobile shell: drawer, bottom tab bar, "More" sheet, safe areas, Android back handling
-- [ ] Bottom-sheet dialogs, touch targets, no hover-only actions
-- [ ] Terminal key bar and keyboard-aware fit; console composer
-- [ ] Mobile copy (save/share, background keep-alive, diagnostics)
-- [ ] Vitest suites for the new pieces; simulated engine gains the mobile commands
+- [x] Mobile shell: drawer, bottom tab bar, "More" sheet, safe areas, Android back handling
+- [x] Bottom-sheet dialogs, touch targets, no hover-only actions
+- [x] Terminal key bar and keyboard-aware fit; console composer
+- [x] Mobile copy (save/share, background keep-alive, diagnostics)
+- [x] Vitest suites for the new pieces; simulated engine gains the mobile commands
 
 ### Phase 4 — Web E2E on mobile viewports
 
-- [ ] Playwright projects: Pixel 7 (Chromium), iPhone 15 (WebKit), iPad (WebKit)
-- [ ] Every workspace flow through the bottom tabs, plus accessibility checks
-- [ ] Wired into CI
+- [x] Playwright projects: Pixel 7 (Chromium), iPhone 15 (WebKit), iPad (WebKit)
+- [x] Every workspace flow through the bottom tabs, plus accessibility checks
+- [x] Wired into CI
 
 ### Phase 5 — Android E2E on the R8 release build
 
-- [ ] `e2e` feature (WebView debugging, mock endpoints, auto consent)
-- [ ] Emulator job: mock-colab + `adb reverse` + Playwright `_android`
-- [ ] Full flow: sign-in, runtime, cells, `input()`, terminal, files, notebook, stop, disconnect
-- [ ] Guard: the shipped release APK is not debuggable and has no WebView debugging
+- [x] `e2e` feature (WebView debugging, mock endpoints, auto consent)
+- [x] Emulator job: mock-colab + `adb reverse` + Playwright `_android`
+- [x] Full flow: sign-in, runtime, cells, `input()`, terminal, files, notebook, stop, disconnect
+- [x] Guard: the shipped release APK is not debuggable and has no WebView debugging
 
 ### Phase 6 — Release pipeline & iOS
 
-- [ ] Signing from secrets (ephemeral key otherwise), version codes per ABI, AAB
-- [ ] `release.yml`: draft release with APKs, AAB, mapping and checksums
-- [ ] iOS: simulator build, launch smoke test, unsigned device build
+- [x] Signing from secrets (ephemeral key otherwise), version codes per ABI, AAB
+- [x] `release.yml`: draft release with APKs, AAB, mapping and checksums (same build steps as the green Android/iOS jobs; not yet run on a real tag)
+- [x] iOS: simulator build, launch smoke test, unsigned device build
 
 ### Phase 7 — Hardening & docs
 
-- [ ] Security review (IPC surface, exported components, backup rules, network security config, logging)
-- [ ] Accessibility pass (TalkBack / VoiceOver labels, focus, reduced motion)
-- [ ] Docs: INSTALL, ARCHITECTURE, TESTING (with a live checklist), RELEASING, TROUBLESHOOTING
+- [x] Security review (IPC surface, exported components, backup rules, network security config, logging)
+- [x] Accessibility pass (labels, focus, 44 px targets, reduced motion); a TalkBack / VoiceOver run on hardware is in the live checklist (`docs/TESTING.md`)
+- [x] Docs: INSTALL, ARCHITECTURE, TESTING (with a live checklist), RELEASING, TROUBLESHOOTING
+
+Status: phases 0–7 are complete and every CI workflow is green (frontend, Rust, audit, web E2E on
+Pixel 7 / Galaxy S8 / iPhone 15 / iPad mini, Android release build for four ABIs with R8, the R8
+e2e APK on an Android 14 emulator, and the iOS simulator build with launch smoke test). Still open:
+the live checklist in `docs/TESTING.md` on real devices with a real Google account, and the first
+tagged release with the keystore secrets configured.
 
 ## 9. Risks
 

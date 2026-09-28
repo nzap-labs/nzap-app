@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="paper">#FF0F0F0E</color>
+    <color name="paper_soft">#FF191917</color>
+    <color name="ink">#FFF0EEE6</color>
+    <color name="graphite">#FF9A9B93</color>
+</resources>

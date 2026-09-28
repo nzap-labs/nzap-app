@@ -23,6 +23,10 @@ pub struct LoopbackServer {
     v4: TcpListener,
     v6: Option<TcpListener>,
     port: u16,
+    /// mobile: where the finished page sends the browser (the app's
+    /// `nzap://auth/done` deep link), closing the auth tab and returning to
+    /// the app. `None` on desktop.
+    return_url: Option<String>,
 }
 
 impl LoopbackServer {
@@ -32,7 +36,14 @@ impl LoopbackServer {
         let v4 = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).await?;
         let port = v4.local_addr()?.port();
         let v6 = TcpListener::bind((Ipv6Addr::LOCALHOST, port)).await.ok();
-        Ok(Self { v4, v6, port })
+        Ok(Self { v4, v6, port, return_url: None })
+    }
+
+    /// mobile: send the browser to `url` once sign-in finishes. Only plain
+    /// `scheme://path` links are accepted, since the value lands in HTML.
+    pub fn with_return_url(mut self, url: Option<String>) -> Self {
+        self.return_url = url.filter(|url| is_safe_return_url(url));
+        self
     }
 
     pub fn port(&self) -> u16 {
@@ -61,7 +72,7 @@ impl LoopbackServer {
                 },
                 None => self.v4.accept().await?.0,
             };
-            match handle_connection(stream, expected_state).await {
+            match handle_connection(stream, expected_state, self.return_url.as_deref()).await {
                 Ok(Some(outcome)) => return outcome,
                 Ok(None) => continue,
                 Err(error) => {
@@ -77,6 +88,7 @@ impl LoopbackServer {
 async fn handle_connection(
     mut stream: TcpStream,
     expected_state: &str,
+    return_url: Option<&str>,
 ) -> std::io::Result<Option<Result<String>>> {
     let head = match tokio::time::timeout(Duration::from_secs(10), read_head(&mut stream)).await {
         Ok(head) => head?,
@@ -122,11 +134,12 @@ async fn handle_connection(
     }
 
     if let Some(error) = error {
-        respond(
+        respond_with(
             &mut stream,
             400,
             "Sign-in cancelled",
             "Google sign-in was cancelled. You can close this tab.",
+            return_url,
         )
         .await?;
         return Ok(Some(Err(Error::Auth(format!("Google sign-in was cancelled ({error}).")))));
@@ -139,11 +152,16 @@ async fn handle_connection(
         ))));
     };
 
-    respond(
+    respond_with(
         &mut stream,
         200,
         "Google connected",
-        "You can close this tab and return to NZAP Engine.",
+        if return_url.is_some() {
+            "Returning to NZAP…"
+        } else {
+            "You can close this tab and return to NZAP Engine."
+        },
+        return_url,
     )
     .await?;
     Ok(Some(Ok(code)))
@@ -189,12 +207,23 @@ async fn respond(
     title: &str,
     detail: &str,
 ) -> std::io::Result<()> {
+    respond_with(stream, status, title, detail, None).await
+}
+
+/// Like [`respond`], with an optional "return to the app" link (mobile).
+async fn respond_with(
+    stream: &mut TcpStream,
+    status: u16,
+    title: &str,
+    detail: &str,
+    return_to: Option<&str>,
+) -> std::io::Result<()> {
     let reason = match status {
         200 => "OK",
         404 => "Not Found",
         _ => "Bad Request",
     };
-    let body = page(status == 200, title, detail);
+    let body = page(status == 200, title, detail, return_to);
     let response = format!(
         "HTTP/1.1 {status} {reason}\r\n\
          Content-Type: text/html; charset=utf-8\r\n\
@@ -210,19 +239,41 @@ async fn respond(
     stream.shutdown().await
 }
 
+/// `scheme://rest` with a lowercase scheme and no characters that need
+/// escaping in an HTML attribute.
+fn is_safe_return_url(url: &str) -> bool {
+    let Some((scheme, rest)) = url.split_once("://") else {
+        return false;
+    };
+    !scheme.is_empty()
+        && scheme
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b"+.-".contains(&b))
+        && rest.bytes().all(|b| b.is_ascii_alphanumeric() || b"/-_.?=&".contains(&b))
+}
+
 /// The page the browser shows after the redirect, in NZAP's paper palette.
-fn page(ok: bool, title: &str, detail: &str) -> String {
+/// With `return_to` (mobile) it also sends the browser back to the app.
+fn page(ok: bool, title: &str, detail: &str, return_to: Option<&str>) -> String {
     let dot = if ok { "#6ece9d" } else { "#e78b72" };
+    let (refresh, button) = match return_to {
+        Some(url) => (
+            format!("<meta http-equiv=\"refresh\" content=\"0;url={url}\">"),
+            format!("<p><a class=\"btn\" href=\"{url}\">Return to NZAP</a></p>"),
+        ),
+        None => (String::new(), String::new()),
+    };
     format!(
         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">\
-<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>{title}</title>\
+<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">{refresh}<title>{title}</title>\
 <style>body{{margin:0;min-height:100vh;display:grid;place-items:center;background:#f8f5ed;color:#11110f;\
 font-family:'DM Sans',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}}\
 .card{{border:1px solid #11110f;border-radius:24px;padding:40px 48px;max-width:440px;text-align:center}}\
 .dot{{display:inline-block;width:12px;height:12px;border-radius:50%;background:{dot}}}\
 h1{{font-size:22px;font-weight:500;margin:16px 0 8px}}p{{color:#6f706b;margin:0;line-height:1.5}}\
+.btn{{display:inline-block;margin-top:20px;padding:12px 24px;border-radius:24px;background:#ffda6e;color:#11110f;text-decoration:none;font-weight:500}}\
 @media (prefers-color-scheme:dark){{body{{background:#0f0f0e;color:#f0eee6}}.card{{border-color:#f0eee6}}p{{color:#9a9b93}}}}\
-</style></head><body><div class=\"card\"><span class=\"dot\"></span><h1>{title}</h1><p>{detail}</p></div></body></html>"
+</style></head><body><div class=\"card\"><span class=\"dot\"></span><h1>{title}</h1><p>{detail}</p>{button}</div></body></html>"
     )
 }
 
@@ -272,6 +323,38 @@ mod tests {
         let server = LoopbackServer::bind().await.unwrap();
         let error = server.wait_for_code("s", Duration::from_millis(50)).await.unwrap_err();
         assert!(matches!(error, Error::Auth(_)));
+    }
+
+    #[tokio::test]
+    async fn mobile_pages_return_to_the_app() {
+        let server = LoopbackServer::bind()
+            .await
+            .unwrap()
+            .with_return_url(Some("nzap://auth/done".to_owned()));
+        let port = server.port();
+        let waiter = tokio::spawn(async move { server.wait_for_code("s", LOGIN_TIMEOUT).await });
+        let ok = get(port, "/callback?code=c&state=s").await;
+        assert!(ok.contains("content=\"0;url=nzap://auth/done\""), "{ok}");
+        assert!(ok.contains("href=\"nzap://auth/done\""));
+        assert_eq!(waiter.await.unwrap().unwrap(), "c");
+    }
+
+    #[test]
+    fn return_urls_are_plain_deep_links() {
+        assert!(is_safe_return_url("nzap://auth/done"));
+        assert!(is_safe_return_url("com.nzaplabs.app://auth?x=1"));
+        for refused in [
+            "javascript:alert(1)",
+            "nzap://a\"><script>",
+            "https://evil.example/<x>",
+            "NZAP://x",
+            "://x",
+            "nzap:auth",
+        ] {
+            assert!(!is_safe_return_url(refused), "{refused}");
+        }
+        let server_page = page(true, "t", "d", None);
+        assert!(!server_page.contains("refresh"));
     }
 
     #[test]

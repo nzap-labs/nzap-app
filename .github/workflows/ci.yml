@@ -33,18 +33,25 @@ jobs:
       - run: npm run build
 
   rust:
-    name: rust (engine)
+    name: rust (engine + shell)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # The shell also builds as a desktop binary for development and tests.
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libdbus-1-dev pkg-config
+          sudo apt-get install -y libwebkit2gtk-4.1-dev librsvg2-dev libdbus-1-dev pkg-config
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
       - name: clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: test

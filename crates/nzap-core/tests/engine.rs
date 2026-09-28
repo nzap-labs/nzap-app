@@ -14,6 +14,8 @@ fn engine(mock: &MockGoogle, root: &std::path::Path) -> Engine {
         paths: AppPaths::under(root),
         endpoints: Endpoints::single_host(&mock.base_url),
         use_keychain: false,
+        secret_store: None,
+        return_url: None,
         oauth_client: Some(OAuthClient { client_id: "test-client".into(), client_secret: None }),
     })
     .unwrap()
@@ -95,6 +97,8 @@ async fn a_stopped_colab_is_a_warning_not_a_disconnect() {
             ..Endpoints::single_host(&mock.base_url)
         },
         use_keychain: false,
+        secret_store: None,
+        return_url: None,
         oauth_client: Some(OAuthClient { client_id: "test-client".into(), client_secret: None }),
     })
     .unwrap();
@@ -141,4 +145,27 @@ async fn settings_and_oauth_client() {
     connect(&engine).await;
     let refused = engine.set_oauth_client(None).await.unwrap_err();
     assert!(refused.to_string().contains("Disconnect"));
+}
+
+/// mobile: a platform secret store replaces the keychain / file choice, and
+/// the connection's refresh token lands in it.
+#[tokio::test]
+async fn a_platform_secret_store_holds_the_connection() {
+    use nzap_core::secrets::{MemoryStore, SecretStore, StorageKind};
+    let mock = MockGoogle::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let store = std::sync::Arc::new(MemoryStore::default());
+    let engine = Engine::new(EngineOptions {
+        paths: AppPaths::under(dir.path()),
+        endpoints: Endpoints::single_host(&mock.base_url),
+        use_keychain: true,
+        secret_store: Some(store.clone()),
+        return_url: Some("nzap://auth/done".into()),
+        oauth_client: Some(OAuthClient { client_id: "test-client".into(), client_secret: None }),
+    })
+    .unwrap();
+    assert_eq!(engine.status().await.storage, StorageKind::Memory);
+    connect(&engine).await;
+    assert!(store.get("google-refresh-token").unwrap().is_some());
+    assert!(!dir.path().join("config/secrets.json").exists(), "nothing falls back to a file");
 }

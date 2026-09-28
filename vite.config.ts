@@ -8,6 +8,10 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 // `build.devUrl` in src-tauri/tauri.conf.json.
 const DEV_PORT = 1420
 
+// `tauri android dev` / `tauri ios dev` on a physical device serve over the
+// network: the CLI sets TAURI_DEV_HOST to this machine's address.
+const DEV_HOST = process.env.TAURI_DEV_HOST
+
 export default defineConfig({
   plugins: [
     // must run before the react plugin so routeTree.gen.ts is fresh
@@ -25,17 +29,21 @@ export default defineConfig({
   server: {
     port: DEV_PORT,
     strictPort: true,
-    host: '127.0.0.1',
+    host: DEV_HOST || '127.0.0.1',
+    hmr: DEV_HOST ? { protocol: 'ws', host: DEV_HOST, port: DEV_PORT + 1 } : undefined,
     watch: {
       // Rebuilding the frontend on every Rust change would reload the webview.
-      ignored: ['**/src-tauri/**', '**/crates/**', '**/target/**'],
+      ignored: ['**/src-tauri/**', '**/crates/**', '**/plugins/**', '**/target/**'],
     },
   },
   envPrefix: ['VITE_', 'TAURI_ENV_'],
   build: {
-    // Tauri ships a modern webview on every platform (WebView2, WKWebView,
-    // WebKitGTK), so no legacy transpilation is needed.
-    target: process.env.TAURI_ENV_PLATFORM === 'windows' ? 'chrome110' : 'safari15',
+    // Tailwind v4 needs Chrome 111+ / Safari 16.4+: Android System WebView
+    // (updated through the Play Store, 111+ even on Android 7) and iOS 16.4+.
+    target:
+      process.env.TAURI_ENV_PLATFORM === 'android' || process.env.TAURI_ENV_PLATFORM === 'windows'
+        ? 'chrome111'
+        : 'safari16.4',
     minify: !process.env.TAURI_ENV_DEBUG,
     sourcemap: Boolean(process.env.TAURI_ENV_DEBUG),
   },

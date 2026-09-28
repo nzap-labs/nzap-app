@@ -20,7 +20,15 @@ repository.
 Every change to vendored code carries a `mobile:` comment (Rust and TS) so a
 re-sync can find and replay it. They are listed here as they land:
 
-- _none yet_
+- `crates/nzap-core/src/auth/loopback.rs`: `LoopbackServer::with_return_url`; the
+  finished page sends the browser to the app's deep link (`nzap://auth/done`).
+- `crates/nzap-core/src/auth/manager.rs`: `AuthManager::set_return_url`.
+- `crates/nzap-core/src/engine.rs`: `EngineOptions::secret_store` (platform
+  Keystore / Keychain store) and `EngineOptions::return_url`.
+- `crates/nzap-core/tests/engine.rs`: the new options, and a test that a platform
+  store holds the connection.
+- `Cargo.toml`: the workspace `nzap-core` dependency has `default-features = false`
+  (no desktop keychain on mobile).
 
 ## Re-syncing
 

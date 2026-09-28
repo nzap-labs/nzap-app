@@ -26,6 +26,12 @@ pub struct EngineOptions {
     pub use_keychain: bool,
     /// Overrides `oauth-client.json` (the `NZAP_OAUTH_CLIENT_JSON` variable).
     pub oauth_client: Option<OAuthClient>,
+    /// mobile: a platform secret store (Android Keystore, iOS Keychain) that
+    /// replaces the keychain / file choice above.
+    pub secret_store: Option<Arc<dyn SecretStore>>,
+    /// mobile: deep link the sign-in page returns to (see
+    /// [`AuthManager::set_return_url`]).
+    pub return_url: Option<String>,
 }
 
 /// The Google Auth card's state — hosted NZAP's `/api/colab/status`.
@@ -81,7 +87,9 @@ impl Engine {
         let current = settings.get();
         let http = crate::http::build_client()?;
 
-        let secret_store: Arc<dyn SecretStore> = if options.use_keychain {
+        let secret_store: Arc<dyn SecretStore> = if let Some(store) = options.secret_store {
+            store
+        } else if options.use_keychain {
             secrets::default_store(crate::KEYCHAIN_SERVICE, paths.secrets_fallback_file())
         } else {
             Arc::new(FileStore::new(paths.secrets_fallback_file()))
@@ -102,6 +110,7 @@ impl Engine {
             secret_store,
             paths.identity_file(),
         ));
+        auth.set_return_url(options.return_url);
         let colab = Arc::new(ColabClient::new(auth.clone()));
         let sessions = SessionManager::new(
             colab.clone(),

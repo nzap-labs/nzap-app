@@ -34,10 +34,10 @@ The same features as the desktop app, built for touch:
 
 ## Supported devices
 
-| Platform | Versions            | CPU architectures                                           |
-| -------- | ------------------- | ----------------------------------------------------------- |
-| Android  | 7.0 (API 24) and up | arm64-v8a, armeabi-v7a, x86_64, x86 (per-ABI and universal) |
-| iOS      | 14 and up           | arm64 devices; arm64 and x86_64 simulators                  |
+| Platform | Versions                                              | CPU architectures                                           |
+| -------- | ----------------------------------------------------- | ----------------------------------------------------------- |
+| Android  | 7.0 (API 24) and up, with Android System WebView 111+ | arm64-v8a, armeabi-v7a, x86_64, x86 (per-ABI and universal) |
+| iOS      | 16.4 and up                                           | arm64 devices; arm64 and x86_64 simulators                  |
 
 ## How it works
 

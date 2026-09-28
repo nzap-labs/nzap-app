@@ -96,6 +96,8 @@ pub struct AuthManager {
     identity_path: PathBuf,
     state: tokio::sync::Mutex<TokenState>,
     remote: Mutex<Option<PendingRemote>>,
+    /// mobile: the deep link the loopback page sends the browser to.
+    return_url: RwLock<Option<String>>,
 }
 
 impl AuthManager {
@@ -124,7 +126,14 @@ impl AuthManager {
             identity_path,
             state: tokio::sync::Mutex::new(TokenState { refresh_token, access: None, identity }),
             remote: Mutex::new(None),
+            return_url: RwLock::new(None),
         }
+    }
+
+    /// mobile: after a loopback sign-in, send the browser to `url` (the app's
+    /// deep link) so the auth tab closes and the app comes back.
+    pub fn set_return_url(&self, url: Option<String>) {
+        *self.return_url.write().unwrap_or_else(|poisoned| poisoned.into_inner()) = url;
     }
 
     pub fn endpoints(&self) -> &Endpoints {
@@ -175,7 +184,9 @@ impl AuthManager {
 
     /// Start a loopback sign-in: binds the listener and builds the consent URL.
     pub async fn begin_loopback(&self, login_hint: Option<&str>) -> Result<LoopbackLogin> {
-        let server = LoopbackServer::bind().await?;
+        let return_url =
+            self.return_url.read().unwrap_or_else(|poisoned| poisoned.into_inner()).clone();
+        let server = LoopbackServer::bind().await?.with_return_url(return_url);
         let redirect_uri = server.redirect_uri();
         let state = oauth::random_token(24);
         let pkce = Pkce::generate();

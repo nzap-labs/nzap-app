@@ -1,0 +1,84 @@
+name: Android
+
+on:
+  push:
+    branches: [main, 'ccr-*', 'phase-*']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  # r27c, the NDK LTS the Tauri docs build against.
+  NDK_VERSION: 27.2.12479018
+  RUST_ANDROID_TARGETS: aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+
+jobs:
+  release-build:
+    name: release build (4 ABIs, R8)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install the NDK
+        run: |
+          sdkmanager --install "ndk;${NDK_VERSION}" > /dev/null
+          echo "NDK_HOME=$ANDROID_HOME/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: android-release
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # One APK per ABI (arm64-v8a, armeabi-v7a, x86, x86_64), each with its
+      # own version code, then the universal APK and the AAB for stores. The
+      # Rust libraries are built once and reused by the later runs.
+      - name: Build per-ABI release APKs
+        run: npx tauri android build --ci --apk --split-per-abi
+      - name: Build the universal APK and AAB
+        run: npx tauri android build --ci --apk --aab
+
+      - name: Verify the release artefacts
+        run: scripts/verify-android-release.sh src-tauri/gen/android/app/build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nzap-android-release
+          path: |
+            src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+            src-tauri/gen/android/app/build/outputs/bundle/**/*.aab
+          if-no-files-found: error
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nzap-android-r8-reports
+          path: |
+            src-tauri/gen/android/app/build/outputs/mapping/**
+            src-tauri/gen/android/app/build/outputs/r8/**
+          retention-days: 30

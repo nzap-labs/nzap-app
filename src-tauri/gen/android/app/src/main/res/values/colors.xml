@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- NZAP design tokens (src/styles/app.css). -->
+<resources>
+    <color name="paper">#FFF8F5ED</color>
+    <color name="paper_soft">#FFF1EDE2</color>
+    <color name="ink">#FF11110F</color>
+    <color name="graphite">#FF6F706B</color>
+    <color name="sunshine">#FFFFDA6E</color>
+    <color name="mint">#FF6ECE9D</color>
+    <color name="coral">#FFE78B72</color>
+</resources>

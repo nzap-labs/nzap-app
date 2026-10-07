@@ -255,6 +255,69 @@ e2e APK on an Android 14 emulator, and the iOS simulator build with launch smoke
 the live checklist in `docs/TESTING.md` on real devices with a real Google account, and the first
 tagged release with the keystore secrets configured.
 
+### Audit (2026-10-07) — where the app stands
+
+Measured locally (no CI minutes spent):
+
+| Check                                        | Result                                                                        |
+| -------------------------------------------- | ----------------------------------------------------------------------------- |
+| ESLint, Prettier, `tsc`                      | clean                                                                         |
+| Vitest                                       | 40 / 40                                                                       |
+| Web E2E, Chromium (Pixel 7, Galaxy S8, wide) | 44 / 44                                                                       |
+| Web E2E, WebKit (iPhone, iPad, Safari)       | not runnable in the cloud sandbox (WebKit download blocked); runs on a laptop |
+| Android emulator E2E, iOS simulator          | need KVM / macOS; run on a workstation or by manual `workflow_dispatch`       |
+
+Findings, most important first:
+
+1. **The UI is a release behind the engine.** `src/` was vendored at `e63d98e`; nzap-engine has
+   since shipped phase 10 (Apps), phase 11 (the NZAP Labs monochrome "chrome" brand: NZ mark,
+   NZΛP wordmark, ink-on-paper palette, brushed-metal primary buttons), phase 12 (in-app
+   updates) and `nzap://` links. The phone app still shows the old cream paper, the yellow
+   "sunshine" accent and the sparkle logo, so the two products no longer look like one.
+2. **Apps are missing on mobile** (`/apps` falls back to Colab) — the engine's headline feature.
+3. **Native chrome is off-brand**: Android `colors.xml` / `themes.xml` use the old palette (yellow
+   `colorPrimary`, cream window background shown before the WebView paints) and the launcher /
+   iOS icons are the old sparkle.
+4. **Phone ergonomics**: once connected, the Google Auth card (three stacked stat tiles) fills
+   the whole first screen of Runtimes, pushing "New runtime" and the runtime list below the fold.
+5. **CI cost**: Android (2 × ~60 min Linux) and iOS (macOS, 10× minute multiplier) run on every
+   pull request. Docs-only changes run everything.
+
+### Phase 8 — Save CI minutes; one local check command
+
+- [ ] `scripts/check.sh`: lint, format, typecheck, Vitest, build, Chromium web E2E, Rust fmt / clippy / tests — what CI runs, locally
+- [ ] Android and iOS workflows: `main` + manual dispatch only (not every PR); drop stale `ccr-*`/`phase-*` triggers
+- [ ] CI skips docs-only changes (`paths-ignore`)
+
+### Phase 9 — Re-sync with nzap-engine (brand, Apps, updates, links)
+
+- [ ] `scripts/sync-engine.sh --apply` to engine `HEAD`; resolve conflicts keeping every `mobile:` edit
+- [ ] Brand: monochrome tokens, chrome fills, NZ mark + wordmark in the header, drawer and onboarding
+- [ ] Mobile-only CSS (safe areas, sheets, touch) kept on top of the new tokens
+- [ ] Desktop-only pieces (in-app updater, desktop deep-link plugin) are stubbed on mobile: stores update the app
+
+### Phase 10 — Apps on the phone
+
+- [ ] `/apps` and `/apps/$appId` routes; Apps in the More sheet and drawer
+- [ ] App page laid out for phones (form, progress and outputs stacked; media fits the width)
+- [ ] CSP: `blob:` for media and waveform decoding, as on desktop
+- [ ] Web E2E on phone viewports: open an app, run it, see outputs
+
+### Phase 11 — Native brand
+
+- [ ] Android `colors.xml` / `themes.xml` (day + night) on the new palette; status / nav bar contrast
+- [ ] Launcher icons (adaptive) and iOS icons from the engine's `brand/app-icon-1024.png`
+
+### Phase 12 — Phone UX polish
+
+- [ ] Compact connection card on phones once connected (one-line summary, details on tap)
+- [ ] Screenshot review of every page on Pixel 7 and Galaxy S8 in light and dark; fix overflow / spacing
+
+### Phase 13 — Docs and pin
+
+- [ ] VENDORED.md pinned to the new engine commit with the new local changes listed
+- [ ] TESTING.md: `scripts/check.sh`, how to run the Android / iOS workflows on demand
+
 ## 9. Risks
 
 | Risk                                                   | Mitigation                                                                                                      |

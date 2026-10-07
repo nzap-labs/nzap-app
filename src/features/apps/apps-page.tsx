@@ -105,7 +105,8 @@ export function AppsPage() {
               account.
             </p>
             <div className="relative mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <label className="flex h-11 flex-1 items-center gap-2 rounded-2xl border border-ink bg-paper px-4">
+              {/* mobile: no flex-1 in the phone's column layout (it collapsed the field). */}
+              <label className="flex h-11 shrink-0 items-center gap-2 rounded-2xl border border-ink bg-paper px-4 sm:flex-1">
                 <Search className="size-4 text-graphite" />
                 <input
                   value={query}

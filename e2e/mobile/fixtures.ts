@@ -9,7 +9,7 @@ export function openApp(page: Page, preset: Parameters<typeof openWebApp>[1] = {
 }
 
 type PrimarySection = 'Runtimes' | 'Console' | 'Terminal' | 'Files'
-type MoreSection = 'Run & jobs' | 'Notebooks' | 'Account' | 'Settings' | 'Chat'
+type MoreSection = 'Apps' | 'Run & jobs' | 'Notebooks' | 'Account' | 'Settings' | 'Chat'
 
 /** The bottom tab bar. */
 export function tabBar(page: Page) {

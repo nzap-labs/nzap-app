@@ -298,10 +298,10 @@ Findings, most important first:
 
 ### Phase 10 — Apps on the phone
 
-- [ ] `/apps` and `/apps/$appId` routes; Apps in the More sheet and drawer
-- [ ] App page laid out for phones (form, progress and outputs stacked; media fits the width)
+- [x] `/apps` and `/apps/$appId` routes; Apps in the More sheet and drawer
+- [x] App page laid out for phones (form, progress and outputs stacked; media fits the width)
 - [x] CSP: `blob:` for media and waveform decoding, as on desktop
-- [ ] Web E2E on phone viewports: open an app, run it, see outputs
+- [x] Web E2E on phone viewports: open an app, run it, see outputs
 
 ### Phase 11 — Native brand
 

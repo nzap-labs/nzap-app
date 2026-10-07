@@ -7,6 +7,7 @@ import {
   Ellipsis,
   FileUp,
   FolderOpen,
+  LayoutGrid,
   NotebookPen,
   SlidersHorizontal,
   SquarePen,
@@ -45,7 +46,7 @@ function useLocationKey(): { path: string; tab: Tab | null } {
 
 /**
  * The phone's bottom tab bar, in NZAP's style: paper surface, ink hairline,
- * a sunshine pill behind the active section. Tablets and desktops (lg and
+ * an ink pill behind the active section. Tablets and desktops (lg and
  * up) keep the sidebar and the workspace's pill tabs instead.
  */
 export function BottomNav() {
@@ -57,7 +58,10 @@ export function BottomNav() {
   if (!status?.connected) return null
 
   const moreActive =
-    tab === 'run' || tab === 'notebooks' || ['/account', '/settings', '/chat'].includes(path)
+    tab === 'run' ||
+    tab === 'notebooks' ||
+    path.startsWith('/apps') ||
+    ['/account', '/settings', '/chat'].includes(path)
 
   return (
     <>
@@ -136,9 +140,17 @@ function MoreSheet({
       <SheetContent aria-describedby="more-sheet-description">
         <SheetTitle>More</SheetTitle>
         <SheetDescription id="more-sheet-description">
-          Run files and jobs, notebooks, your account and settings.
+          Apps, files and jobs, notebooks, your account and settings.
         </SheetDescription>
         <ul className="mt-3 space-y-1">
+          <MoreItem
+            icon={<LayoutGrid />}
+            label="Apps"
+            hint="One-tap AI apps on your runtimes"
+            active={path.startsWith('/apps')}
+            onSelect={close}
+            link={{ to: '/apps' }}
+          />
           <MoreItem
             icon={<FileUp />}
             label="Run & jobs"
@@ -191,6 +203,7 @@ function MoreSheet({
 
 type MoreLink =
   | { to: '/colab'; search: { tab: Tab } }
+  | { to: '/apps' }
   | { to: '/account' }
   | { to: '/settings' }
   | { to: '/chat' }

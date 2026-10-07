@@ -58,6 +58,7 @@ function SettingsForm({ view }: { view: SettingsView }) {
       <PageHeader title="Settings" />
       <div className="scrollbar-thin pb-tabbar min-h-0 flex-1 overflow-y-auto px-4 md:px-6">
         <div className="mx-auto w-full max-w-3xl space-y-6">
+          {/* mobile: updates come from the app store or a release APK, not an in-app updater. */}
           <Card
             title="Keep-alive"
             description={

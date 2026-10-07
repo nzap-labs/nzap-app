@@ -291,16 +291,16 @@ Findings, most important first:
 
 ### Phase 9 — Re-sync with nzap-engine (brand, Apps, updates, links)
 
-- [ ] `scripts/sync-engine.sh --apply` to engine `HEAD`; resolve conflicts keeping every `mobile:` edit
-- [ ] Brand: monochrome tokens, chrome fills, NZ mark + wordmark in the header, drawer and onboarding
-- [ ] Mobile-only CSS (safe areas, sheets, touch) kept on top of the new tokens
-- [ ] Desktop-only pieces (in-app updater, desktop deep-link plugin) are stubbed on mobile: stores update the app
+- [x] `scripts/sync-engine.sh --apply` to engine `HEAD`; resolve conflicts keeping every `mobile:` edit
+- [x] Brand: monochrome tokens, chrome fills, NZ mark + wordmark in the header, drawer and onboarding
+- [x] Mobile-only CSS (safe areas, sheets, touch) kept on top of the new tokens
+- [x] Desktop-only pieces (in-app updater, desktop deep-link plugin) are stubbed on mobile: stores update the app
 
 ### Phase 10 — Apps on the phone
 
 - [ ] `/apps` and `/apps/$appId` routes; Apps in the More sheet and drawer
 - [ ] App page laid out for phones (form, progress and outputs stacked; media fits the width)
-- [ ] CSP: `blob:` for media and waveform decoding, as on desktop
+- [x] CSP: `blob:` for media and waveform decoding, as on desktop
 - [ ] Web E2E on phone viewports: open an app, run it, see outputs
 
 ### Phase 11 — Native brand

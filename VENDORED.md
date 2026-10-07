@@ -13,7 +13,8 @@ repository.
 | `public/`                 | `public/`                    |                                                 |
 
 **Source commit:** `e63d98e1cfcdd1b457b04b189c92e2b6fb8e5e27`
-(nzap-engine `main`, "phases 7–9 — end-to-end tests, packaging & releases, hardening & docs").
+(nzap-engine `main`, "build: Cargo.lock for the deep-link plugin; docs for nzap:// links": Apps,
+the NZAP Labs brand, in-app updates and `nzap://` links).
 
 ## Local changes
 
@@ -35,6 +36,13 @@ re-sync can find and replay it. They are listed here as they land:
   dialogs, safe areas, platform wording (`lib/platform.ts`), notebook import from
   file text, and the simulated engine's phone behaviour.
 - `e2e/web/console.spec.ts`: an exact match for `42` (it matched timestamps).
+- `src/features/updates/` is not vendored: phones update through the store or a
+  release APK, so the shell and Settings do not mount the desktop updater.
+- `src/features/deep-links/deep-links.tsx`: only `parseDeepLink`; the desktop
+  listener (`tauri-plugin-deep-link`) waits for the plugin's mobile setup.
+- `src/components/logo.tsx`: "Mobile" under the wordmark instead of "Engine".
+- `src/features/colab/notebooks-panel.tsx`: notebook actions wrap on narrow phones.
+- `src-tauri/tauri.conf.json` follows the engine's CSP (`blob:` for app media).
 - `Cargo.toml`: the workspace `nzap-core` dependency has `default-features = false`
   (no desktop keychain on mobile).
 

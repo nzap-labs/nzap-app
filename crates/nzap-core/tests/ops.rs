@@ -305,7 +305,11 @@ async fn catalog_refresh_integrity_and_running_notebooks() {
     let status = library.catalog().refresh().await;
     assert_eq!(serde_json::to_value(status.origin).unwrap(), "remote");
     assert_eq!(status.error, None);
-    assert_eq!(status.count, 5);
+    let bundle: Value = serde_json::from_str(include_str!("../catalog/bundled.json")).unwrap();
+    assert_eq!(status.count, bundle["notebooks"].as_array().unwrap().len());
+    // App specs travel with the remote index.
+    let kokoro = library.list().into_iter().find(|notebook| notebook.slug == "kokoro-tts").unwrap();
+    assert_eq!(kokoro.app.unwrap()["runtime"]["accelerator"], "T4");
     // Revalidation uses the ETag.
     library.catalog().refresh().await;
     assert_eq!(env.mock.state().static_not_modified, 1);
@@ -341,7 +345,10 @@ async fn catalog_refresh_integrity_and_running_notebooks() {
             .static_files
             .insert("catalog/notebooks/extra-one/notebook.py".into(), "print(2)\n".into());
     }
-    assert_eq!(library.catalog().refresh().await.count, 6);
+    assert_eq!(
+        library.catalog().refresh().await.count,
+        bundle["notebooks"].as_array().unwrap().len() + 1
+    );
     let tampered = library.get("public:extra-one").await.unwrap_err();
     assert!(tampered.to_string().contains("integrity"), "{tampered}");
 

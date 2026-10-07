@@ -81,6 +81,8 @@ export function DashboardShell() {
             </aside>
           </div>
           <main className="pl-safe pr-safe flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            {/* mobile: no in-app updater (the stores / release APKs update the app);
+                nzap:// app links need the mobile deep-link plugin (PLAN.md phase 14). */}
             <Outlet />
           </main>
           <BottomNav />

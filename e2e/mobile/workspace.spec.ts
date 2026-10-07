@@ -30,7 +30,7 @@ test.describe('Phone workspace', () => {
   test('terminal: type, and use the key bar for Ctrl-C', async ({ page }) => {
     await goTo(page, 'Terminal')
     const terminal = page.getByRole('region', { name: 'Terminal' })
-    await expect(terminal.getByText('root@fake:/content#').first()).toBeVisible()
+    await expect(terminal.getByText('root@colab:/content#').first()).toBeVisible()
     const input = page.locator('.xterm-helper-textarea')
     await input.pressSequentially('whoami')
     await input.press('Enter')

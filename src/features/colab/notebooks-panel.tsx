@@ -1,11 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import {
   BookOpen,
   Copy,
   Download,
   FileCode2,
   FileUp,
+  LayoutGrid,
   Lock,
   Pencil,
   Play,
@@ -29,6 +31,7 @@ import { cn } from '@/lib/cn'
 import { errorMessage } from '@/lib/ipc'
 import { savedMessage } from '@/lib/platform'
 import type { CatalogStatus, Notebook } from '@/types/notebook'
+import { appSpecOf } from '@/features/apps/spec'
 import { NotebookEditorDialog } from './notebook-editor-dialog'
 
 type EditorState =
@@ -321,7 +324,8 @@ function NotebookCard({
           {notebook.author && !notebook.isMine && <span>· by {notebook.author}</span>}
         </p>
       </div>
-      <div className="flex shrink-0 flex-wrap items-center gap-2">
+      {/* mobile: the actions wrap on narrow phones (Fork + Open app + Run). */}
+      <div className="flex min-w-0 flex-wrap items-center gap-2 sm:shrink-0">
         {onEdit && (
           <Button variant="secondary" size="sm" onClick={onEdit}>
             <Pencil className="size-4" /> Edit
@@ -346,6 +350,15 @@ function NotebookCard({
           <Button variant="secondary" size="sm" onClick={onFork}>
             <Copy className="size-4" /> Fork
           </Button>
+        )}
+        {appSpecOf(notebook) && (
+          <Link
+            to="/apps/$appId"
+            params={{ appId: notebook.id }}
+            className="inline-flex h-9 items-center gap-2 rounded-3xl border border-ink px-4 text-sm font-medium transition-colors hover:bg-paper-soft"
+          >
+            <LayoutGrid className="size-4" /> Open app
+          </Link>
         )}
         <Button
           size="sm"

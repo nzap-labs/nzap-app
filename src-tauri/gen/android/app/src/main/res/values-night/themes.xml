@@ -1,8 +1,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.nzap_app" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/sunshine</item>
-        <item name="colorOnPrimary">@color/ink</item>
-        <item name="colorAccent">@color/sunshine</item>
+        <item name="colorPrimary">@color/accent</item>
+        <item name="colorOnPrimary">@color/on_accent</item>
+        <item name="colorAccent">@color/accent</item>
         <item name="android:colorBackground">@color/paper</item>
         <item name="android:windowBackground">@color/paper</item>
         <item name="android:statusBarColor">@android:color/transparent</item>

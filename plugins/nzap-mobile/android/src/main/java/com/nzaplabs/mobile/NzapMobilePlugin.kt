@@ -264,6 +264,6 @@ class NzapMobilePlugin(private val activity: Activity) : Plugin(activity) {
 
   companion object {
     /** NZAP's paper colour for the Custom Tab toolbar. */
-    private const val PAPER = 0xFFF8F5ED.toInt()
+    private const val PAPER = 0xFFF6F6F3.toInt()
   }
 }

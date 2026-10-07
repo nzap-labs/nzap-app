@@ -31,7 +31,8 @@ export function applyTheme(theme: Theme): void {
   document.documentElement.style.colorScheme = theme
   document
     .querySelector('meta[name="theme-color"]')
-    ?.setAttribute('content', theme === 'dark' ? '#0f0f0e' : '#f8f5ed')
+    // mobile: the brand's paper colours (the engine still has the old ones).
+    ?.setAttribute('content', theme === 'dark' ? '#0a0a0b' : '#f6f6f3')
   syncSystemBars(theme)
 }
 

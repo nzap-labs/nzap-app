@@ -305,8 +305,9 @@ Findings, most important first:
 
 ### Phase 11 — Native brand
 
-- [ ] Android `colors.xml` / `themes.xml` (day + night) on the new palette; status / nav bar contrast
-- [ ] Launcher icons (adaptive) and iOS icons from the engine's `brand/app-icon-1024.png`
+- [x] Android `colors.xml` / `themes.xml` (day + night) on the new palette; status / nav bar contrast
+- [x] Launcher icons (adaptive), iOS icons and the notification icon from the NZAP Labs mark (`scripts/build-mobile-icons.py`); Custom Tab toolbar and `theme-color` on the new paper
+- [ ] Confirm on device: one manual run of the Android workflow (`workflow_dispatch`) — not buildable in the cloud sandbox (no Android SDK)
 
 ### Phase 12 — Phone UX polish
 

@@ -12,6 +12,11 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/pull_request_template.md'
   workflow_dispatch:
+    inputs:
+      e2e-only:
+        description: 'Only the emulator E2E job (skip the 4-ABI release build)'
+        type: boolean
+        default: false
 
 concurrency:
   group: android-${{ github.ref }}
@@ -30,7 +35,7 @@ jobs:
   release-build:
     name: release build (4 ABIs, R8)
     # Dependabot PRs build only in nzap-labs/nzap-app, not in CI mirrors.
-    if: github.actor != 'dependabot[bot]' || github.repository == 'nzap-labs/nzap-app'
+    if: (github.actor != 'dependabot[bot]' || github.repository == 'nzap-labs/nzap-app') && !inputs.e2e-only
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:

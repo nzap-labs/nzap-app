@@ -21,6 +21,20 @@ mock=$!
 finish() {
   status=$?
   adb logcat -d >"$artifacts/logcat.txt" 2>/dev/null || true
+  if [[ $status -ne 0 ]]; then
+    # Artifacts are not always reachable; put the essentials in the job log.
+    echo "::group::App log (logcat, NZAP / WebView / crashes)"
+    grep -iE 'nzap|tauri|wry|chromium|cr_|AndroidRuntime|FATAL|WebView' "$artifacts/logcat.txt" | tail -200 || true
+    echo "::endgroup::"
+    echo "::group::Mock Google log"
+    tail -60 "$artifacts/mock.log" || true
+    echo "::endgroup::"
+    for context in $(find "$artifacts/results" -name error-context.md 2>/dev/null); do
+      echo "::group::$context"
+      cat "$context"
+      echo "::endgroup::"
+    done
+  fi
   adb shell dumpsys activity services com.nzaplabs.app >"$artifacts/services.txt" 2>/dev/null || true
   kill "$mock" 2>/dev/null || true
   exit $status

@@ -32,7 +32,10 @@ export async function launchApp({ restart = true } = {}): Promise<Page> {
   const pid = await waitForPid()
   // The devtools socket opens when WebView debugging is switched on, before
   // the WebView exists; wait for the view so its page target is there too.
-  await phone.wait({ pkg: PACKAGE, clazz: 'android.webkit.WebView' }, { timeout: 60_000 })
+  // (Best effort: attachPage below retries regardless.)
+  await phone
+    .wait({ pkg: PACKAGE, clazz: /WebView$/ }, { timeout: 30_000 })
+    .catch(() => console.log('No WebView in the accessibility tree yet; attaching anyway.'))
   const webView = await phone.webView(
     { socketName: `webview_devtools_remote_${pid}` },
     { timeout: 60_000 },

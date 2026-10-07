@@ -316,8 +316,20 @@ Findings, most important first:
 
 ### Phase 13 — Docs and pin
 
-- [ ] VENDORED.md pinned to the new engine commit with the new local changes listed
-- [ ] TESTING.md: `scripts/check.sh`, how to run the Android / iOS workflows on demand
+- [x] VENDORED.md pinned to the new engine commit with the new local changes listed
+- [x] TESTING.md / CONTRIBUTING.md: `scripts/check.sh`, how to run the Android / iOS workflows on demand
+
+### Phase 14 — Needs a device or a manual CI run (open)
+
+- [ ] One `workflow_dispatch` of **Android** and **iOS** on this branch: confirms the new icons,
+      colours and the plugin's PNG notification icon build, and the emulator E2E with the folded
+      Google card
+- [ ] `nzap://apps/<id>` links on Android / iOS (tauri-plugin-deep-link mobile setup, intent filter
+      for the `apps` / `app` hosts next to `auth`), then mount `DeepLinks`
+- [ ] WebKit projects (iPhone 15, iPad mini, Safari) on a laptop: `scripts/check.sh` runs them when
+      WebKit is installed
+- [ ] The live checklist in `docs/TESTING.md` on real phones, plus: Apps (Kokoro) end to end, launcher
+      icon on Pixel / Samsung masks, notification icon in the status bar
 
 ## 9. Risks
 

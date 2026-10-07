@@ -18,15 +18,16 @@ Thanks for helping. This guide keeps changes easy to review and safe to ship.
 ## Before you open a PR
 
 ```bash
-npm run lint && npm run format:check && npm run typecheck && npm test
-npx playwright test
-cargo fmt --all --check
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
+scripts/check.sh            # everything CI's main workflow runs (add --quick for frontend only)
 ```
 
-CI also builds the Android release (R8) for all four ABIs, runs the emulator
-E2E suite against it, and builds and launches the iOS app in a simulator.
+GitHub Actions minutes are limited, so run the checks locally and push when
+they pass. On pull requests CI runs the frontend, Rust, audit and web E2E jobs
+(not for docs-only changes). The Android workflow (R8 release for four ABIs,
+emulator E2E) and the iOS workflow (simulator build and launch, on macOS, which
+bills at 10x) run on `main` and on demand: start them from the Actions tab
+(**Run workflow** on your branch) when a change touches native code, the
+Gradle / Xcode projects, the plugin or `src-tauri`.
 
 ## Where things go
 

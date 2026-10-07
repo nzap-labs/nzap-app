@@ -12,6 +12,15 @@
 | iOS smoke              | `.github/workflows/ios.yml`                                                                   | the simulator build installs, launches and stays up                                                |
 | Android release checks | `scripts/verify-android-release.sh <app/build>`                                               | signed, not debuggable, one ABI per split APK, R8 ran, no e2e build shipped                        |
 
+`scripts/check.sh` runs the frontend, web E2E and Rust suites in one go, the
+same as the CI workflow, so a push does not need Actions minutes to find out.
+WebKit projects run when Playwright's WebKit is installed and are skipped
+(with a note) otherwise.
+
+The Android and iOS workflows are not triggered by pull requests; run them
+from the Actions tab (`workflow_dispatch`) for changes to native code, and
+they run on every push to `main`.
+
 In a sandbox without Playwright's own browser download, point Chromium
 projects at a local build: `PW_CHROMIUM_PATH=/path/to/chrome npx playwright test`.
 

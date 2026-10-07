@@ -12,7 +12,7 @@ repository.
 | `e2e/web/`                | `e2e/web/`                   | web E2E, extended with mobile viewports         |
 | `public/`                 | `public/`                    |                                                 |
 
-**Source commit:** `e63d98e1cfcdd1b457b04b189c92e2b6fb8e5e27`
+**Source commit:** `16e70c0c53c9e9f5a43b103174166acf7ef3505b`
 (nzap-engine `main`, "build: Cargo.lock for the deep-link plugin; docs for nzap:// links": Apps,
 the NZAP Labs brand, in-app updates and `nzap://` links).
 

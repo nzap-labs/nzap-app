@@ -84,7 +84,7 @@ export function ColabWorkspace() {
           {/* Phones show the Google card only on Runtimes (or while signing in),
               so each section starts at the top of the screen. */}
           <div className={cn(status?.connected && tab !== 'runtimes' && 'hidden lg:block')}>
-            <ConnectionCard />
+            <ConnectionCard collapsible />
           </div>
 
           {status && !status.connected ? (

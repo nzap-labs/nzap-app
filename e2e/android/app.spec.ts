@@ -123,10 +123,10 @@ test('releases the runtime and disconnects', async () => {
   await page.getByRole('dialog').getByRole('button', { name: 'Stop and release' }).click()
   await expect(runtimes).toContainText('No runtimes yet')
 
-  await page
-    .getByRole('region', { name: 'Google Auth' })
-    .getByRole('button', { name: 'Disconnect' })
-    .click()
+  // On phones the connected card is one row; open it to reach Disconnect.
+  const card = page.getByRole('region', { name: 'Google Auth' })
+  await card.getByRole('button', { name: 'Show Google account details' }).click()
+  await card.getByRole('button', { name: 'Disconnect' }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Disconnect' }).click()
   await expect(page.getByRole('region', { name: 'Google Auth' })).toContainText('not connected')
   expect(await appIsRunning()).toBe(true)

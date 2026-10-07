@@ -139,7 +139,8 @@ function SettingsForm({ view }: { view: SettingsView }) {
                 value={catalogUrl}
                 onChange={(event) => setCatalogUrl(event.target.value)}
                 aria-label="Catalog URL"
-                className="min-w-0 flex-1 font-mono text-sm"
+                // mobile: the URL gets its own line on phones instead of shrinking to "https:".
+                className="w-full min-w-0 flex-none font-mono text-sm sm:w-auto sm:flex-1"
               />
               <Button type="submit" variant="secondary" size="sm" disabled={update.isPending}>
                 <Save className="size-4" /> Save

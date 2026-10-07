@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn'
 import type { ColabRunFileEvent } from '@/types/colab'
 import { Block, renderMimeBundle, type OutputBlock } from './output-view'
 import { savedMessage } from '@/lib/platform'
+import { NoRuntime } from './no-runtime'
 
 const FIELD =
   'h-10 w-full rounded-2xl border border-ink bg-transparent px-4 text-sm outline-none placeholder:text-graphite/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink'
@@ -41,12 +42,7 @@ export function RunFilePanel({ sessionName }: { sessionName: string | null }) {
   const picker = useRef<HTMLInputElement>(null)
 
   if (!sessionName) {
-    return (
-      <section className="rounded-[24px] border border-line bg-paper p-8 text-center">
-        <FileUp className="mx-auto size-6 text-graphite" />
-        <p className="mt-3 text-sm text-graphite">Select a runtime to run a file on it.</p>
-      </section>
-    )
+    return <NoRuntime icon={<FileUp />}>Select a runtime to run a file on it.</NoRuntime>
   }
 
   function updateCurrent(update: (cell: CellRun) => CellRun) {

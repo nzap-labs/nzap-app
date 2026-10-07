@@ -7,6 +7,7 @@ import { openTerminal, type TerminalConnection } from '@/api/colab'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
 import { isTouchDevice } from '@/lib/platform'
+import { NoRuntime } from './no-runtime'
 
 type State = 'connecting' | 'open' | 'closed'
 
@@ -139,12 +140,7 @@ export function TerminalPanel({ sessionName }: { sessionName: string | null }) {
   }, [sessionName, attempt])
 
   if (!sessionName) {
-    return (
-      <section className="rounded-[24px] border border-line bg-paper p-8 text-center">
-        <TerminalIcon className="mx-auto size-6 text-graphite" />
-        <p className="mt-3 text-sm text-graphite">Select a runtime to open a terminal on it.</p>
-      </section>
-    )
+    return <NoRuntime icon={<TerminalIcon />}>Select a runtime to open a terminal on it.</NoRuntime>
   }
 
   return (

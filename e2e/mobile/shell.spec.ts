@@ -109,4 +109,43 @@ test.describe('Phone shell', () => {
       expect(box.width).toBeGreaterThanOrEqual(44)
     }
   })
+
+  test('Runtimes leads with the runtimes: the Google card folds into a row', async ({ page }) => {
+    await openApp(page, { connected: true })
+    const card = page.getByRole('region', { name: 'Google Auth' })
+    const toggle = card.getByRole('button', { name: 'Show Google account details' })
+    await expect(toggle).toContainText('ada@example.com')
+    await expect(card.getByRole('button', { name: 'Disconnect' })).toBeHidden()
+    // "New runtime" is on the first screen.
+    const heading = page.getByText('New runtime', { exact: true })
+    await expect(heading).toBeInViewport()
+
+    await toggle.tap()
+    await expect(card.getByRole('button', { name: 'Disconnect' })).toBeVisible()
+    await expect(card).toContainText('in secure storage')
+    await card.getByRole('button', { name: 'Hide Google account details' }).tap()
+    await expect(card.getByRole('button', { name: 'Disconnect' })).toBeHidden()
+  })
+
+  test('sections that need a runtime lead to Runtimes', async ({ page }) => {
+    await openApp(page, { connected: true })
+    for (const section of ['Console', 'Terminal', 'Files'] as const) {
+      await goTo(page, section)
+      await page.getByRole('link', { name: 'Go to Runtimes' }).tap()
+      await expect(tabBar(page).getByRole('link', { name: 'Runtimes' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      )
+      await expect(page.getByPlaceholder('my-runtime')).toBeVisible()
+    }
+  })
+
+  test('settings fields use the width of the phone', async ({ page }) => {
+    await openApp(page, { connected: true })
+    await goTo(page, 'Settings')
+    const field = page.getByRole('textbox', { name: 'Catalog URL' })
+    const width = (await field.boundingBox())!.width
+    expect(width).toBeGreaterThan(page.viewportSize()!.width * 0.6)
+    await expectNoHorizontalScroll(page)
+  })
 })

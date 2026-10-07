@@ -311,8 +311,8 @@ Findings, most important first:
 
 ### Phase 12 — Phone UX polish
 
-- [ ] Compact connection card on phones once connected (one-line summary, details on tap)
-- [ ] Screenshot review of every page on Pixel 7 and Galaxy S8 in light and dark; fix overflow / spacing
+- [x] Compact connection card on phones once connected (one-line summary, details on tap)
+- [x] Screenshot review of every page on Pixel 7 and Galaxy S8 in light and dark; fixes: Console / Terminal / Files / Run empty states link to Runtimes, the catalog URL field takes the phone's width
 
 ### Phase 13 — Docs and pin
 

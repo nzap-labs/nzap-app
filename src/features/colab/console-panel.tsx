@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ExternalLink } from '@/components/external-link'
 import type { ColabExecuteEvent } from '@/types/colab'
 import { Block, renderMimeBundle, type OutputBlock } from './output-view'
+import { NoRuntime } from './no-runtime'
 
 let nextId = 1
 
@@ -145,12 +146,7 @@ export function ConsolePanel({ sessionName }: { sessionName: string | null }) {
   }
 
   if (!sessionName) {
-    return (
-      <section className="rounded-[24px] border border-line bg-paper p-8 text-center">
-        <Terminal className="mx-auto size-6 text-graphite" />
-        <p className="mt-3 text-sm text-graphite">Select a runtime to run code.</p>
-      </section>
-    )
+    return <NoRuntime icon={<Terminal />}>Select a runtime to run code.</NoRuntime>
   }
 
   return (

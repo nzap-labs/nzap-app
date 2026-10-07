@@ -43,4 +43,20 @@ describe('ConnectionCard', () => {
     await user.click(submit)
     await waitFor(() => expect(engine.state.connected).toBe(true))
   })
+
+  it('folds into one summary row on phones when collapsible', async () => {
+    const { user } = renderWithEngine(<ConnectionCard collapsible />, { connected: true })
+    const toggle = await screen.findByRole('button', { name: 'Show Google account details' })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(toggle).toHaveTextContent('ada@example.com')
+    expect(await within(toggle).findByText(/36\.0 free units/)).toBeInTheDocument()
+    // The full card stays in the page for tablets (lg), hidden on phones.
+    const details = document.getElementById('google-auth-details')!
+    expect(details).toHaveClass('hidden', 'lg:block')
+
+    await user.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(details).not.toHaveClass('hidden')
+    expect(within(details).getByRole('button', { name: /Disconnect/ })).toBeInTheDocument()
+  })
 })

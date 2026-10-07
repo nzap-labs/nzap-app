@@ -28,6 +28,7 @@ import { useDialogs } from '@/components/dialogs'
 import { cn } from '@/lib/cn'
 import type { ColabFileEntry } from '@/types/colab'
 import { savedMessage } from '@/lib/platform'
+import { NoRuntime } from './no-runtime'
 
 const TEXT_EXTENSIONS = [
   '.py',
@@ -76,12 +77,7 @@ export function FilesPanel({ sessionName }: { sessionName: string | null }) {
   const [dragging, setDragging] = useState(false)
 
   if (!sessionName) {
-    return (
-      <section className="rounded-[24px] border border-line bg-paper p-8 text-center">
-        <Folder className="mx-auto size-6 text-graphite" />
-        <p className="mt-3 text-sm text-graphite">Select a runtime to browse its files.</p>
-      </section>
-    )
+    return <NoRuntime icon={<Folder />}>Select a runtime to browse its files.</NoRuntime>
   }
 
   const entries = listing.data?.entries ?? []

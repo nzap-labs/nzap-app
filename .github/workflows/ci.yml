@@ -1,9 +1,24 @@
 name: CI
 
 on:
+  # Pull requests and main only, and never for docs-only changes: run
+  # `scripts/check.sh` locally before pushing (Actions minutes are scarce).
   push:
-    branches: [main, 'ccr-*', 'phase-*']
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/pull_request_template.md'
   pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/pull_request_template.md'
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}

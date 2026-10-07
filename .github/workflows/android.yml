@@ -1,9 +1,16 @@
 name: Android
 
 on:
+  # Heavy (Linux ~1 h; macOS bills at 10x): main and on demand only, not every
+  # pull request. Run it from the Actions tab when a PR touches native code.
   push:
-    branches: [main, 'ccr-*', 'phase-*']
-  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/pull_request_template.md'
   workflow_dispatch:
 
 concurrency:

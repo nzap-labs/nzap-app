@@ -3,7 +3,7 @@ updates:
   - package-ecosystem: cargo
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     groups:
       tauri:
         patterns: ['tauri*']
@@ -11,7 +11,7 @@ updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     groups:
       tauri:
         patterns: ['@tauri-apps/*']
@@ -26,9 +26,9 @@ updates:
   - package-ecosystem: gradle
     directory: /src-tauri/gen/android
     schedule:
-      interval: weekly
+      interval: monthly
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly

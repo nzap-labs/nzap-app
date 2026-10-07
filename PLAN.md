@@ -285,9 +285,9 @@ Findings, most important first:
 
 ### Phase 8 — Save CI minutes; one local check command
 
-- [ ] `scripts/check.sh`: lint, format, typecheck, Vitest, build, Chromium web E2E, Rust fmt / clippy / tests — what CI runs, locally
-- [ ] Android and iOS workflows: `main` + manual dispatch only (not every PR); drop stale `ccr-*`/`phase-*` triggers
-- [ ] CI skips docs-only changes (`paths-ignore`)
+- [x] `scripts/check.sh`: lint, format, typecheck, Vitest, build, Chromium web E2E, Rust fmt / clippy / tests — what CI runs, locally
+- [x] Android and iOS workflows: `main` + manual dispatch only (not every PR); drop stale `ccr-*`/`phase-*` triggers; Dependabot monthly
+- [x] CI skips docs-only changes (`paths-ignore`)
 
 ### Phase 9 — Re-sync with nzap-engine (brand, Apps, updates, links)
 

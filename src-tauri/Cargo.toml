@@ -1,0 +1,57 @@
+[package]
+name = "nzap-app"
+description = "NZAP for Android and iOS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+default-run = "nzap-app"
+
+[lib]
+name = "nzap_app_lib"
+path = "src/lib.rs"
+# staticlib for iOS, cdylib for Android, rlib for tests and the desktop dev binary.
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "nzap-app"
+path = "src/main.rs"
+
+[features]
+# CI-only Android E2E build: WebView debugging for Playwright, mock Google
+# endpoints and automatic consent. Never enabled for shipped builds.
+e2e = ["tauri/devtools"]
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+log = "0.4"
+# The platform secret store replaces the desktop keychain.
+nzap-core = { workspace = true, default-features = false }
+percent-encoding = "2"
+serde.workspace = true
+serde_json.workspace = true
+tauri = { version = "2.12", features = [] }
+tauri-plugin-log = "2"
+tauri-plugin-nzap-mobile = { path = "../plugins/nzap-mobile" }
+tauri-plugin-opener = "2"
+tokio = { workspace = true }
+url = "2"
+
+[target.'cfg(target_os = "ios")'.dependencies]
+# iOS keeps the Google connection in the Keychain through nzap-core.
+nzap-core = { workspace = true, features = ["keychain"] }
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+# Desktop development builds only: native save dialogs.
+tauri-plugin-dialog = "2"
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true

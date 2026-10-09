@@ -1,0 +1,21 @@
+[package]
+name = "nzap-mock-colab"
+description = "Mock Google OAuth, Colab control plane, Jupyter proxy, kernel and TTY servers for NZAP Engine tests."
+publish = false
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+axum = { version = "0.8", features = ["ws"] }
+base64 = "0.22"
+serde.workspace = true
+serde_json.workspace = true
+sha2 = "0.10"
+tokio = { workspace = true, features = ["full"] }
+
+[lints]
+workspace = true

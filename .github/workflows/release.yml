@@ -1,0 +1,213 @@
+name: Release
+
+# Tag vX.Y.Z to build signed Android artefacts and iOS builds, and attach them
+# to a draft GitHub Release. `workflow_dispatch` builds the same artefacts
+# without publishing (a dry run).
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  NDK_VERSION: 27.2.12479018
+
+jobs:
+  version:
+    name: version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      code: ${{ steps.version.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        name: Version name and Android version code
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version=$(jq -r .version src-tauri/tauri.conf.json)
+          fi
+          [[ "$version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] || { echo "::error::$version is not X.Y.Z"; exit 1; }
+          # X.Y.Z → X*10000 + Y*100 + Z; Gradle multiplies by 10 and adds the ABI.
+          code=$(( BASH_REMATCH[1] * 10000 + BASH_REMATCH[2] * 100 + BASH_REMATCH[3] ))
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "NZAP $version (version code base $code)"
+
+  android:
+    name: android (signed, R8)
+    needs: version
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      VERSION_CONFIG: '{"version":"${{ needs.version.outputs.version }}","bundle":{"android":{"versionCode":${{ needs.version.outputs.code }}}}}'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Install the NDK
+        run: |
+          sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$sdkmanager" --licenses > /dev/null || true
+          "$sdkmanager" --install "ndk;${NDK_VERSION}" > /dev/null
+          echo "NDK_HOME=$ANDROID_HOME/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # The release keystore, when the maintainer has configured it. Without
+      # it the build is signed with a throwaway debug key (installable for
+      # testing, not updatable across releases) and the release says so.
+      - name: Release keystore
+        id: keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [[ -n "$KEYSTORE_BASE64" ]]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > src-tauri/gen/android/release.jks
+            {
+              echo "NZAP_KEYSTORE_FILE=release.jks"
+              echo "NZAP_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+              echo "NZAP_KEY_ALIAS=$KEY_ALIAS"
+              echo "NZAP_KEY_PASSWORD=${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
+            } >> "$GITHUB_ENV"
+            echo "signed=release" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::ANDROID_KEYSTORE_BASE64 is not set: signing with a debug key."
+            echo "signed=debug" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build per-ABI APKs
+        run: npx tauri android build --ci --apk --split-per-abi --config "$VERSION_CONFIG"
+      - name: Build the universal APK and AAB
+        run: npx tauri android build --ci --apk --aab --config "$VERSION_CONFIG"
+
+      - name: Verify the artefacts
+        run: scripts/verify-android-release.sh src-tauri/gen/android/app/build
+
+      - name: Collect
+        run: |
+          version=${{ needs.version.outputs.version }}
+          mkdir -p dist-android
+          build=src-tauri/gen/android/app/build/outputs
+          for apk in $(find "$build/apk" -name '*release*.apk'); do
+            flavor=$(basename "$(dirname "$(dirname "$apk")")")
+            case "$flavor" in
+              arm64) abi=arm64-v8a ;; arm) abi=armeabi-v7a ;; x86) abi=x86 ;; x86_64) abi=x86_64 ;;
+              *) abi=universal ;;
+            esac
+            cp "$apk" "dist-android/NZAP-$version-android-$abi.apk"
+          done
+          cp "$(find "$build/bundle" -name '*release*.aab' | head -1)" "dist-android/NZAP-$version-android.aab"
+          (cd "$build/mapping" && zip -qr "$GITHUB_WORKSPACE/dist-android/NZAP-$version-android-r8-mapping.zip" .)
+          ls -la dist-android
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-android
+          path: dist-android
+          retention-days: 30
+
+      - name: Remove the keystore
+        if: always()
+        run: rm -f src-tauri/gen/android/release.jks
+
+    outputs:
+      signed: ${{ steps.keystore.outputs.signed }}
+
+  ios:
+    name: ios (unsigned IPA + simulator app)
+    needs: version
+    runs-on: macos-latest
+    timeout-minutes: 120
+    env:
+      VERSION_CONFIG: '{"version":"${{ needs.version.outputs.version }}"}'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: brew install xcodegen
+      - run: npx tauri ios init --ci
+      - name: Device build (unsigned IPA)
+        run: npx tauri ios build --ci --target aarch64 --no-sign --config "$VERSION_CONFIG"
+      - name: Simulator build
+        run: npx tauri ios build --ci --target aarch64-sim --no-sign --config "$VERSION_CONFIG"
+      - name: Collect
+        run: |
+          version=${{ needs.version.outputs.version }}
+          mkdir -p dist-ios
+          cp "$(find src-tauri/gen/apple/build -name '*.ipa' | head -1)" "dist-ios/NZAP-$version-ios-unsigned.ipa"
+          app=$(find src-tauri/gen/apple -name 'NZAP.app' -path '*sim*' | head -1)
+          (cd "$(dirname "$app")" && zip -qry "$GITHUB_WORKSPACE/dist-ios/NZAP-$version-ios-simulator.app.zip" NZAP.app)
+          ls -la dist-ios
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-ios
+          path: dist-ios
+          retention-days: 30
+
+  publish:
+    name: draft release
+    needs: [version, android, ios]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        run: (cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt)
+      - name: Create the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SIGNED: ${{ needs.android.outputs.signed }}
+        run: |
+          version=${{ needs.version.outputs.version }}
+          {
+            echo "## NZAP $version"
+            echo
+            echo "| File | For |"
+            echo "| --- | --- |"
+            echo "| \`NZAP-$version-android-arm64-v8a.apk\` | most Android phones and tablets |"
+            echo "| \`NZAP-$version-android-armeabi-v7a.apk\` | older 32-bit Android devices |"
+            echo "| \`NZAP-$version-android-x86_64.apk\` / \`-x86.apk\` | Chromebooks, emulators |"
+            echo "| \`NZAP-$version-android-universal.apk\` | any Android device (larger) |"
+            echo "| \`NZAP-$version-android.aab\` | Google Play |"
+            echo "| \`NZAP-$version-ios-unsigned.ipa\` | iOS, after signing with your own certificate |"
+            echo "| \`NZAP-$version-ios-simulator.app.zip\` | the iOS Simulator |"
+            echo
+            if [[ "$SIGNED" != "release" ]]; then
+              echo "> **Android builds are signed with a temporary debug key** — the release keystore secrets"
+              echo "> are not configured (see docs/RELEASING.md). Updates from these APKs to a store build"
+              echo "> will need an uninstall."
+            fi
+          } > notes.md
+          gh release create "$GITHUB_REF_NAME" dist/* --draft --title "NZAP $version" --notes-file notes.md

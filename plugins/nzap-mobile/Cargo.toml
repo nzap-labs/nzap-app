@@ -1,0 +1,23 @@
+[package]
+name = "tauri-plugin-nzap-mobile"
+description = "NZAP's native mobile integration: Android Keystore secrets, the sign-in browser, save/share, background keep-alive."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+# Lets tauri-build find the Kotlin (android/) and Swift (ios/) sources.
+links = "tauri-plugin-nzap-mobile"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+tauri = { version = "2.12", features = [] }
+thiserror.workspace = true
+
+[build-dependencies]
+tauri-plugin = { version = "2", features = ["build"] }
+
+[lints]
+workspace = true

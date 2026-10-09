@@ -1,0 +1,84 @@
+name: iOS
+
+on:
+  # Heavy (Linux ~1 h; macOS bills at 10x): main and on demand only, not every
+  # pull request. Run it from the Actions tab when a PR touches native code.
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/pull_request_template.md'
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  simulator:
+    name: simulator build + launch, unsigned device build
+    # Dependabot PRs build only in nzap-labs/nzap-app, not in CI mirrors.
+    if: github.actor != 'dependabot[bot]' || github.repository == 'nzap-labs/nzap-app'
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ios
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      # gen/apple is generated from tauri.conf.json, Info.ios.plist and the
+      # plugins on every build (it is not committed).
+      - name: Generate the Xcode project
+        run: npx tauri ios init --ci
+
+      - name: Build for the simulator (arm64)
+        run: npx tauri ios build --ci --target aarch64-sim --no-sign
+
+      - name: Launch it on a simulator
+        run: |
+          app=$(find src-tauri/gen/apple/build -name 'NZAP.app' -path '*sim*' -maxdepth 4 | head -1)
+          [ -n "$app" ] || app=$(find src-tauri/gen/apple -name 'NZAP.app' | head -1)
+          echo "App: $app"
+          scripts/ios-smoke.sh "$app" ios-artifacts
+
+      - name: Build for devices (arm64, unsigned IPA)
+        run: npx tauri ios build --ci --target aarch64 --no-sign
+
+      - name: Collect the builds
+        if: always()
+        run: |
+          mkdir -p ios-artifacts
+          find src-tauri/gen/apple/build -name '*.ipa' -exec cp {} ios-artifacts/ \; || true
+          app=$(find src-tauri/gen/apple -name 'NZAP.app' -path '*sim*' | head -1)
+          [ -n "$app" ] && (cd "$(dirname "$app")" && zip -qry "$GITHUB_WORKSPACE/ios-artifacts/NZAP-simulator.app.zip" NZAP.app) || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nzap-ios
+          path: ios-artifacts
+          retention-days: 14

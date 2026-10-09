@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- NZAP design tokens (src/styles/app.css): monochrome ink on paper; the
+     accent is ink itself. Mint and coral are for status only. -->
+<resources>
+    <color name="paper">#FFF6F6F3</color>
+    <color name="paper_soft">#FFECECE8</color>
+    <color name="ink">#FF0C0C0E</color>
+    <color name="graphite">#FF66676C</color>
+    <color name="accent">#FF0C0C0E</color>
+    <color name="on_accent">#FFF6F6F3</color>
+    <color name="mint">#FF3FAE78</color>
+    <color name="coral">#FFDC6A52</color>
+</resources>

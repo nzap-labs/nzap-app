@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The only folder the app hands to other apps (share sheet): a cache folder
+  the Rust side stages exports, artifacts and logs into. Never secrets or
+  runtime state.
+-->
+<paths>
+    <cache-path name="share" path="share/" />
+</paths>

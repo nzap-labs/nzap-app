@@ -1,0 +1,34 @@
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      tauri:
+        patterns: ['tauri*']
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      tauri:
+        patterns: ['@tauri-apps/*']
+      tooling:
+        patterns:
+          ['eslint*', '@eslint/*', 'typescript*', 'prettier', 'vite*', 'vitest', '@vitejs/*']
+    ignore:
+      # typescript-eslint pins a TypeScript range; take majors by hand once it supports them.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: gradle
+    directory: /src-tauri/gen/android
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

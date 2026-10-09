@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyLists/PLIST-1.0.dtd">
+<!-- Merged over the generated Info.plist by `tauri ios build`. -->
+<plist version="1.0">
+<dict>
+  <!-- HTTPS only, through the OS's standard exempt TLS: no export paperwork. -->
+  <key>ITSAppUsesNonExemptEncryption</key>
+  <false/>
+  <!-- Upload from the camera or photo library through the WebView's file chooser. -->
+  <key>NSCameraUsageDescription</key>
+  <string>Take a photo to upload to your Colab runtime.</string>
+  <key>NSPhotoLibraryUsageDescription</key>
+  <string>Choose photos to upload to your Colab runtime.</string>
+  <!-- The status bar follows the app's light / dark theme. -->
+  <key>UIViewControllerBasedStatusBarAppearance</key>
+  <true/>
+</dict>
+</plist>

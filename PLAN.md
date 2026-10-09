@@ -321,7 +321,7 @@ Findings, most important first:
 
 ### Phase 14 — Needs a device or a manual CI run (open)
 
-- [ ] One `workflow_dispatch` of **Android** and **iOS** on this branch: confirms the new icons,
+- [x] One `workflow_dispatch` of **Android** and **iOS** on this branch: confirms the new icons,
       colours and the plugin's PNG notification icon build, and the emulator E2E with the folded
       Google card
 - [ ] `nzap://apps/<id>` links on Android / iOS (tauri-plugin-deep-link mobile setup, intent filter
@@ -330,6 +330,9 @@ Findings, most important first:
       WebKit is installed
 - [ ] The live checklist in `docs/TESTING.md` on real phones, plus: Apps (Kokoro) end to end, launcher
       icon on Pixel / Samsung masks, notification icon in the status bar
+      — done 2026-10-09: Android release build (4 ABIs + universal + AAB, R8 verified), emulator
+      E2E 10/10 on Android 14 (the harness now waits for the WebView page before attaching), iOS
+      simulator build + launch + unsigned IPA
 
 ## 9. Risks
 

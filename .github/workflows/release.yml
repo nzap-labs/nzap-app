@@ -122,7 +122,7 @@ jobs:
           (cd "$build/mapping" && zip -qr "$GITHUB_WORKSPACE/dist-android/NZAP-$version-android-r8-mapping.zip" .)
           ls -la dist-android
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: release-android
           path: dist-android
@@ -166,7 +166,7 @@ jobs:
           app=$(find src-tauri/gen/apple -name 'NZAP.app' -path '*sim*' | head -1)
           (cd "$(dirname "$app")" && zip -qry "$GITHUB_WORKSPACE/dist-ios/NZAP-$version-ios-simulator.app.zip" NZAP.app)
           ls -la dist-ios
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: release-ios
           path: dist-ios

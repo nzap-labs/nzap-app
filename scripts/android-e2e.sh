@@ -23,8 +23,15 @@ finish() {
   adb logcat -d >"$artifacts/logcat.txt" 2>/dev/null || true
   if [[ $status -ne 0 ]]; then
     # Artifacts are not always reachable; put the essentials in the job log.
-    echo "::group::App log (logcat, NZAP / WebView / crashes)"
-    grep -iE 'nzap|tauri|wry|chromium|cr_|AndroidRuntime|FATAL|WebView' "$artifacts/logcat.txt" | tail -200 || true
+    # The app's own processes (by pid, from ActivityManager), plus crashes.
+    pids=$(grep -oE 'Start proc [0-9]+:com\.nzaplabs\.app' "$artifacts/logcat.txt" | grep -oE '[0-9]+' | sort -u | tr '\n' '|')
+    echo "::group::App log (logcat for pids ${pids%|}, crashes)"
+    awk -v pids="${pids%|}" 'BEGIN { n = split(pids, list, "|"); for (i = 1; i <= n; i++) want[list[i]] = 1 }
+      ($3 in want) || /AndroidRuntime|FATAL EXCEPTION|com\.nzaplabs\.app/' "$artifacts/logcat.txt" | tail -250 || true
+    echo "::endgroup::"
+    echo "::group::WebView devtools targets"
+    curl -s --max-time 5 http://127.0.0.1:9223/json/list || echo "(not reachable)"
+    echo
     echo "::endgroup::"
     echo "::group::Mock Google log"
     tail -60 "$artifacts/mock.log" || true
@@ -32,6 +39,7 @@ finish() {
     for context in $(find "$artifacts/results" -name error-context.md 2>/dev/null); do
       echo "::group::$context"
       cat "$context"
+      echo
       echo "::endgroup::"
     done
   fi

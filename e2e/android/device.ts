@@ -1,14 +1,19 @@
+import { execFileSync } from 'node:child_process'
 import {
   _android as android,
+  chromium,
   type AndroidDevice,
-  type AndroidWebView,
+  type Browser,
   type Page,
 } from '@playwright/test'
 
 export const PACKAGE = 'com.nzaplabs.app'
 const ACTIVITY = `${PACKAGE}/.MainActivity`
+/** Host port forwarded to the app's WebView devtools socket. */
+const CDP_PORT = 9223
 
 let device: AndroidDevice | undefined
+let browser: Browser | undefined
 
 /** The emulator (the only device attached). */
 export async function theDevice(): Promise<AndroidDevice> {
@@ -20,44 +25,61 @@ export async function theDevice(): Promise<AndroidDevice> {
 }
 
 /**
- * Start the app (fresh process unless `keepRunning`) and attach to its
- * WebView. Needs WebView debugging, which only the e2e build has.
+ * Start the app (a fresh process unless `restart` is false) and attach to its
+ * WebView over the Chrome DevTools Protocol. Needs WebView debugging, which
+ * only the e2e build has.
+ *
+ * The app's devtools socket (`webview_devtools_remote_<pid>`) is forwarded
+ * to the host with adb, and Playwright connects once DevTools lists the
+ * page — the socket opens before the WebView has loaded anything, and
+ * attaching then finds no page. Every step has a timeout and says what it saw.
  */
 export async function launchApp({ restart = true } = {}): Promise<Page> {
   const phone = await theDevice()
+  await browser?.close().catch(() => undefined)
+  browser = undefined
   if (restart) await phone.shell(`am force-stop ${PACKAGE}`)
   await phone.shell(`am start -W -n ${ACTIVITY}`)
-  // Attach to this process's WebView by its devtools socket: after a restart
-  // Playwright may still list the previous process's (dead) WebView.
   const pid = await waitForPid()
-  // The devtools socket opens when WebView debugging is switched on, before
-  // the WebView exists; wait for the view so its page target is there too.
-  // (Best effort: attachPage below retries regardless.)
-  await phone
-    .wait({ pkg: PACKAGE, clazz: /WebView$/ }, { timeout: 30_000 })
-    .catch(() => console.log('No WebView in the accessibility tree yet; attaching anyway.'))
-  const webView = await phone.webView(
-    { socketName: `webview_devtools_remote_${pid}` },
-    { timeout: 60_000 },
-  )
-  const page = await attachPage(webView)
+
+  adb('forward', '--remove-all')
+  adb('forward', `tcp:${CDP_PORT}`, `localabstract:webview_devtools_remote_${pid}`)
+  const endpoint = `http://127.0.0.1:${CDP_PORT}`
+  await waitForPageTarget(endpoint)
+
+  browser = await chromium.connectOverCDP(endpoint, { timeout: 60_000 })
+  const context = browser.contexts()[0]
+  if (!context) throw new Error('The WebView has no browser context.')
+  const page =
+    context.pages().find((candidate) => !candidate.url().startsWith('about:')) ??
+    context.pages()[0] ??
+    (await context.waitForEvent('page', { timeout: 30_000 }))
   await page.waitForLoadState('domcontentloaded')
   return page
 }
 
-/**
- * The WebView's page. Playwright resolves `page()` to the first page of the
- * connection and caches it, even when the page target has not appeared yet
- * (undefined); drop that cached result and connect again until it is there.
- */
-async function attachPage(webView: AndroidWebView): Promise<Page> {
-  for (let attempt = 0; attempt < 30; attempt++) {
-    const page = await webView.page()
-    if (page) return page
-    ;(webView as unknown as { _pagePromise?: unknown })._pagePromise = undefined
+/** Wait until DevTools lists a page in the app's WebView. */
+async function waitForPageTarget(endpoint: string) {
+  let seen = 'nothing'
+  for (let attempt = 0; attempt < 90; attempt++) {
+    try {
+      const response = await fetch(`${endpoint}/json/list`)
+      const targets = (await response.json()) as { type: string; url: string }[]
+      seen = JSON.stringify(targets.map(({ type, url }) => ({ type, url })))
+      if (targets.some((target) => target.type === 'page')) {
+        console.log(`WebView targets: ${seen}`)
+        return
+      }
+    } catch (error) {
+      seen = String(error)
+    }
     await new Promise((resolve) => setTimeout(resolve, 1_000))
   }
-  throw new Error('The WebView never showed a page.')
+  throw new Error(`The app's WebView never listed a page (last seen: ${seen}).`)
+}
+
+function adb(...args: string[]) {
+  execFileSync('adb', args, { stdio: 'pipe' })
 }
 
 async function waitForPid(): Promise<string> {
@@ -78,6 +100,8 @@ export async function appIsRunning(): Promise<boolean> {
 }
 
 export async function closeDevice() {
+  await browser?.close().catch(() => undefined)
+  browser = undefined
   await device?.close()
   device = undefined
 }

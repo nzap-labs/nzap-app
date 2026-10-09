@@ -76,7 +76,7 @@ jobs:
           app=$(find src-tauri/gen/apple -name 'NZAP.app' -path '*sim*' | head -1)
           [ -n "$app" ] && (cd "$(dirname "$app")" && zip -qry "$GITHUB_WORKSPACE/ios-artifacts/NZAP-simulator.app.zip" NZAP.app) || true
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: nzap-ios

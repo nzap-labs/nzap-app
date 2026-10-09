@@ -87,7 +87,7 @@ jobs:
         working-directory: src-tauri/gen/android
         run: ./gradlew --no-daemon :tauri-plugin-nzap-mobile:testDebugUnitTest
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: nzap-android-release
           path: |
@@ -96,7 +96,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: nzap-android-r8-reports
@@ -186,7 +186,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: bash scripts/android-e2e.sh "$(find src-tauri/gen/android/app/build/outputs/apk -name '*release*.apk' | head -1)"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: android-e2e-diagnostics
